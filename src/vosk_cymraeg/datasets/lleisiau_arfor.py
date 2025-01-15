@@ -24,10 +24,10 @@ def fetch_lleisiau_arfor(output_path: Path) -> None:
 
         # Same as Banc: Since we don't have any info every utterance is a unique speaker
         ds = ds.add_column(
-            "speaker", [f"lla{i + speaker_count:04d}" for i in range(len(ds))]
+            "speaker", [f"lla-{i + speaker_count:04d}" for i in range(len(ds))]
         )
         ds = ds.add_column(
-            "utterance", [f"lla{i + speaker_count:04d}-0000" for i in range(len(ds))]
+            "utterance", [f"lla-{i + speaker_count:04d}-0000" for i in range(len(ds))]
         )
         speaker_count += len(ds)
 

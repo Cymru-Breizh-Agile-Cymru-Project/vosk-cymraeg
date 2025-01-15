@@ -12,11 +12,11 @@ def fetch_banc_trawsgrifiadau_bangor(output_path: Path) -> None:
     )
 
     # Since the data contains no speaker information we can treat all utterances as unique
-    # speakers which means that the format for each clip is btb<speaker>-0000
+    # speakers which means that the format for each clip is btb-<speaker>-0000
     print("Generating speaker and utterance columns")
-    all_ds = all_ds.add_column("speaker", [f"btb{i:04d}" for i in range(len(all_ds))])
+    all_ds = all_ds.add_column("speaker", [f"btb-{i:04d}" for i in range(len(all_ds))])
     all_ds = all_ds.add_column(
-        "utterance", [f"btb{i:04d}-0000" for i in range(len(all_ds))]
+        "utterance", [f"btb-{i:04d}-0000" for i in range(len(all_ds))]
     )
 
     # Batch dumps all of the bytes in audio
