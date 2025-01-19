@@ -21,6 +21,7 @@ dependencies = [
 [project.scripts]
 vosk = "vosk_cymraeg:main"
 fetch = "vosk_cymraeg.scripts.fetch_datasets:main"
+export = "vosk_cymraeg.scripts.export_kaldi:main"
 
 [build-system]
 requires = ["hatchling"]
