@@ -26,16 +26,16 @@ class Dataset:
 
 # List of available datasets. The keys are used by argparse
 DATASETS = {
-    # "cv": Dataset(
-    #     "Common Voice",
-    #     Path("data/processed/cv/cy"),
-    #     lambda output_path: process_common_voice(Path("data/raw/cv/cy"), output_path),
-    # ),
-    # "btb": Dataset(
-    #     "Banc Trawsgrifiadau Bangor",
-    #     Path("data/processed/banc"),
-    #     fetch_banc_trawsgrifiadau_bangor,
-    # ),
+    "cv": Dataset(
+        "Common Voice",
+        Path("data/processed/cv/cy"),
+        lambda output_path: process_common_voice(Path("data/raw/cv/cy"), output_path),
+    ),
+    "btb": Dataset(
+        "Banc Trawsgrifiadau Bangor",
+        Path("data/processed/banc"),
+        fetch_banc_trawsgrifiadau_bangor,
+    ),
     "lla": Dataset(
         "Lleisiau Arfor",
         Path("data/processed/lleisiau_arfor"),
