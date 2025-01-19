@@ -11,27 +11,28 @@ def main() -> None:
     """Create a training/test corpus for Kaldi"""
     args = _get_args()
     console = Console()
+    output_folder = Path("data/output")
 
     # Load merged corpora
     train_dataset = pl.read_csv(args.train)
     
-    build_text_corpus(args.output)
-    build_lexicon([], args.output)
+    build_text_corpus(output_folder)
+    build_lexicon([], output_folder)
     
     # silence_phones.txt
-    silence_phones_path  = args.output / "local/dict_nosp/silence_phones.txt"
+    silence_phones_path  = output_folder / "local/dict_nosp/silence_phones.txt"
     with open(silence_phones_path, 'w', encoding='utf-8') as f:
         f.write(f'SIL\noov\nSPN\nLAU\nNSN\n')
     
     # nonsilence_phones.txt
-    nonsilence_phones_path = args.output / "local/dict_nosp/nonsilence_phones.txt"
+    nonsilence_phones_path = output_folder / "local/dict_nosp/nonsilence_phones.txt"
     with open(nonsilence_phones_path, 'w', encoding='utf-8') as f:
         pass
         # for p in sorted(phonemes):
         #     f.write(f'{p}\n')
     
     # optional_silence.txt
-    optional_silence_path  = args.output / "local/dict_nosp/optional_silence.txt"
+    optional_silence_path  = output_folder / "local/dict_nosp/optional_silence.txt"
     with open(optional_silence_path, 'w', encoding='utf-8') as f:
         f.write('SIL\n')
     
@@ -40,7 +41,7 @@ def main() -> None:
         "train",
         train_dataset,
         args.train.parent / "clips",
-        args.output
+        output_folder
     )
     
 
@@ -55,15 +56,8 @@ def _get_args() -> argparse.Namespace:
     parser.add_argument("--train", help="Path to training dataset csv file", type=Path)
     parser.add_argument("--test", help="Path to evaluation dataset csv file", type=Path)
     parser.add_argument("--clear", action="store_true", help="Clears the target folder")
-    parser.add_argument("--output", default="output", help="Target folder for the Kaldi dataset", type=Path)
+    # parser.add_argument("--output", default="output", help="Target folder for the Kaldi dataset", type=Path)
 
-    # Used to select which datasets to processs. Defaults to all of them
-    # parser.add_argument(
-    #     "--dataset",
-    #     nargs="+",
-    #     choices=list(DATASETS.keys()),
-    #     default=list(DATASETS.keys()),
-    # )
     return parser.parse_args()
 
 
