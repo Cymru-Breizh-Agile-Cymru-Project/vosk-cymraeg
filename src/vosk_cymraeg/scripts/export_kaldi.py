@@ -16,7 +16,9 @@ def main() -> None:
     # Load merged corpora
     train_dataset = pl.read_csv(args.train)
     
-    build_text_corpus(output_folder)
+    # We only provide the train dataset to build the text corpus 
+    build_text_corpus(train_dataset, output_folder)
+    
     build_lexicon([], output_folder)
     
     # silence_phones.txt
@@ -61,19 +63,25 @@ def _get_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def build_text_corpus(output_path: Path) -> None:
+def build_text_corpus(df: pl.DataFrame, output_path: Path) -> None:
     """Build the text corpus"""
-    pass
+    
+    output_path = output_path / "local"
+    os.makedirs(output_path, exist_ok=True)
 
+    with open(output_path / "corpus.txt", 'w', encoding='utf-8') as _f:
+        for row in df.rows():
+            _f.write(f"{row[2]}\n")
+    
 
 def build_lexicon(words: List[str], output_path: Path) -> None:
     """
-        Build a lexicon from a list of words
-        
-            Silences            -> SIL
-            Spoken noises       -> SPN
-            Non-spoken noises   -> NSN
-            Laughter            -> LAU
+    Build a lexicon from a list of words
+    
+        Silences            -> SIL
+        Spoken noises       -> SPN
+        Non-spoken noises   -> NSN
+        Laughter            -> LAU
     """
 
     special_tags = {
@@ -114,7 +122,7 @@ def build_dataset(
         clips_path: Path,
         output_path: Path
     ) -> None:
-    print(clips_path)
+
     dataset_path = output_path / name
     os.makedirs(dataset_path, exist_ok=True)
 
