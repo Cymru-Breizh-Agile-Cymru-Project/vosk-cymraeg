@@ -224,6 +224,6 @@ def build_dataset(
     with open(dataset_path / "wav.scp", 'w', encoding='utf-8') as _f:
         for row in df.sort("utterance").rows():
             audio_path = clips_path / (row[1] + ".wav")
-            _f.write(f"{row[1]}\t{audio_path}\n")
+            _f.write(f"{row[1]}\t{audio_path.absolute()}\n")
     
     print("done")
