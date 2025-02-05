@@ -29,7 +29,7 @@ def main() -> None:
     unique_words = set()
     sentences = set()
     for row in train_dataset.rows():
-        sub_sentences = split_sentence(row[2])
+        sub_sentences = split_sentence(row[2]) # split_sentences does nothing atm
         for sub in sub_sentences:
             sub = remove_punctuation(sub).strip()
             if not sub:
@@ -38,10 +38,13 @@ def main() -> None:
             if unvalid_chars:
                 print(yellow(f"Unvalid chars [{''.join(unvalid_chars)}] \"{sub}\""))
                 continue
+
+            sub = sub.lower() # We could preserve capitalized words in the future
+
             sentences.add(sub)
             unique_words.update(sub.split())
     
-    # We only provide the train dataset to build the text corpus 
+    # We only provide the train dataset to build the text corpus
     build_text_corpus(sentences, output_folder)
     
     phones = build_lexicon(unique_words, output_folder)
