@@ -39,7 +39,11 @@ def main() -> None:
                 "<clirio gwddf>",
             ]:
                 if special_tag in sub:
-                    sub.replace(special_tag, special_tag.replace(' ', '_'))
+                    sub = sub.replace(special_tag, special_tag.replace(' ', '_'))
+
+            # Normalize apostrophes
+            sub = sub.replace('’', "'")
+            sub = sub.replace('‘', "'")
 
             sub = remove_punctuation(sub).strip()
             if not sub:
