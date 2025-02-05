@@ -31,6 +31,16 @@ def main() -> None:
     for row in train_dataset.rows():
         sub_sentences = split_sentence(row[2]) # split_sentences does nothing atm
         for sub in sub_sentences:
+            # Rename special tags containing spaces
+            # so they stay whole during tokenization
+            for special_tag in [
+                "<anadlu i mewn yn sydyn>",
+                "<chwythu allan>",
+                "<clirio gwddf>",
+            ]:
+                if special_tag in sub:
+                    sub.replace(special_tag, special_tag.replace(' ', '_'))
+
             sub = remove_punctuation(sub).strip()
             if not sub:
                 continue
@@ -137,14 +147,14 @@ def build_lexicon(words: set[str], output_path: Path) -> None:
 
     special_tags = {
         "<anadlu>":                 "SPN",
-        "<anadlu i mewn yn sydyn>": "SPN",
+        "<anadlu_i_mewn_yn_sydyn>": "SPN",
         "<aneglur>":                "SPN",
         "<cerddoriaeth>":           "NSN",
         "<chwerthin>":              "LAU",
         "<chwibanu>":               "SPN",
-        "<chwythu allan>":          "SPN",
+        "<chwythu_allan>":          "SPN",
         "<clapio>":                 "NSN",
-        "<clirio gwddf>":           "SPN",
+        "<clirio_gwddf>":           "SPN",
         "<cusanu>":                 "SPN",
         "<distawrwydd>":            "SIL",
         "<ochneidio>":              "SPN",
