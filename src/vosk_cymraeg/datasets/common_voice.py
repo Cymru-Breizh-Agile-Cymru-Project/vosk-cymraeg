@@ -13,6 +13,7 @@ def process_common_voice(input_path: Path, output_path: Path) -> None:
     print(f"Smallest N that still yields unique client IDs is {cid_length}")
 
     for split in tqdm(DATASET_SPLITS, desc="Converting splits"):
+        # Load the data and construct required columns
         df = (
             pl.scan_csv(input_path / f"{split}.tsv", separator="\t", quote_char="")
             .with_columns(speaker="cvcy-" + pl.col("client_id").str.slice(-cid_length))
@@ -24,16 +25,20 @@ def process_common_voice(input_path: Path, output_path: Path) -> None:
             .select(["speaker", "utterance", "sentence", "path"])
             .collect()
         )
+
+        # Loop through each file and convert from mp3 to wav
         for row in tqdm(df.rows(named=True), desc="Converting files"):
             convert_file(
                 input_path / "clips" / row["path"],
                 output_path / "clips" / f"{row['utterance']}.wav",
             )
 
+        # Select only the stuff we need and write to a csv file
         df.select(["speaker", "utterance", "sentence"]).write_csv(
             output_path / f"{split}.csv"
         )
 
+    # Combine all splits and write to csv
     dfs = [pl.read_csv(output_path / f"{split}.csv") for split in DATASET_SPLITS]
     pl.concat(dfs).write_csv(output_path / "all.csv")
 
@@ -56,6 +61,8 @@ def determine_cid_length(input_path: Path) -> int:
 
 
 def convert_file(input_path: Path, output_path: Path, overwrite: bool = False) -> bool:
+    """Converts the CV .mp3 file provided to a mono channel, 16kHz wav file. If
+    the file exists and overwrite is set to false nothing happens."""
     if not overwrite and output_path.exists():
         return
 
