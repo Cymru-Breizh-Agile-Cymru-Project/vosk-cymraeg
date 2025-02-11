@@ -1,0 +1,16 @@
+services:
+  training_env:
+    image: kaldi-training-env
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      args:
+        USERNAME: prv21fgt
+        USER_UID: 1001
+        USER_GID: 1001
+    volumes:
+      - .:/workspaces/vosk
+    stdin_open: true
+    tty: true
+volumes:
+  .:

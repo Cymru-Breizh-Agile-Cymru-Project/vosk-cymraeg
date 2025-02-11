@@ -1,7 +1,7 @@
 {
 	"name": "Kaldi Development Environment",
 	"build": {
-		"dockerfile": "Dockerfile"
+		"dockerfile": "../Dockerfile"
 	},
 	"customizations": {
 		"vscode": {
