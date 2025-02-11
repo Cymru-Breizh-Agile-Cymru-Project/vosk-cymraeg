@@ -16,6 +16,22 @@ This repository supports both [Dev Containers](https://containers.dev/) and [Doc
 To use Docker compose run and attach to the training environment run the following command:
 `docker compose run --rm training_env`. The current Docker compose file is set up with a default user, UID, and GID. You should change these to the same as the host machine to ensure that files made within the environment has the correct permissions and owners. You can find the current users UID and GID by using the `id` command on Linux.
 
+## Datasets Used
+
+### Transcribed Speech
+|Name|Author|Source|
+|---|---|---|
+| Banc Trawsgrifiadau Bangor | Language Technologies Unit, Bangor University | [link](https://huggingface.co/datasets/techiaith/banc-trawsgrifiadau-bangor) |
+| Lleisiau ARFOR | Cymen in collaboration with the Language Technologies Unit, Bangor University | [link](https://huggingface.co/datasets/cymen-arfor/lleisiau-arfor)
+| Common Voice | Mozilla Foundation | [link](https://commonvoice.mozilla.org) |
+
+### Pronunciation Dictionaries
+|Name|Author|Source|
+|---|---|---|
+| Geiriadur Ynganu Bangor | Language Technologies Unit, Bangor University | [link](https://github.com/techiaith/geiriadur-ynganu-bangor) |
+
+In addition the resources listed above, the final pronunciation dictionary contains entires from [Lecsicon Cymraeg Bangor](https://github.com/techiaith/lecsicon-cymraeg-bangor) that has been converted using an [updated version](https://github.com/Cymru-Breizh-Agile-Cymru-Project/vosk-cymraeg/blob/main/src/vosk_cymraeg/llef_py3.py) of [welsh-lts](https://github.com/techiaith/welsh-lts/blob/master/llef.py).
+
 ## Maintainers
 
 This repository is being created and maintained by:
