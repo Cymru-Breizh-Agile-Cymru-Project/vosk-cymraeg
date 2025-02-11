@@ -1,11 +1,12 @@
 FROM kaldiasr/kaldi
 
 # Install apt packages
+# (only curl is required for UV, the rest are for the developer)
 RUN apt update
 RUN apt upgrade -y
 RUN apt install -y git wget make tar neovim fish gcc curl
 
-# Setup the user profile
+# Setup the user profile (these can be modified as required)
 ARG USERNAME=prv21fgt
 ARG USER_UID=1001
 ARG USER_GID=1001
