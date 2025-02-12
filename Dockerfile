@@ -32,5 +32,11 @@ RUN git clone https://gitlab.com/prvInSpace/uniplexed-commafiles ~/.config
 # Install UV
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 
+# Fix to get rid of Git warning
+RUN git config --global --add safe.directory /opt/kaldi
+
+# Set the workdir to the mounted volume
+WORKDIR /workspaces/vosk
+
 ENTRYPOINT /usr/bin/fish
 
