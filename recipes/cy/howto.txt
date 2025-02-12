@@ -1,0 +1,6 @@
+# Set GPU to compute exclusive mode (optional)
+sudo nvidia-smi -c 3
+
+./run.sh -1
+(nohup) ./run.sh 10 > out.txt 2> error.txt && shutdown &
+./copy_final_result.sh
