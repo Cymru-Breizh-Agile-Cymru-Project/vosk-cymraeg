@@ -28,17 +28,17 @@ class Dataset:
 DATASETS = {
     "cv": Dataset(
         "Common Voice",
-        Path("data/processed/cv/cy"),
+        Path("data/interim/cv/cy"),
         lambda output_path: process_common_voice(Path("data/raw/cv/cy"), output_path),
     ),
     "btb": Dataset(
         "Banc Trawsgrifiadau Bangor",
-        Path("data/processed/banc"),
+        Path("data/interim/banc"),
         fetch_banc_trawsgrifiadau_bangor,
     ),
     "lla": Dataset(
         "Lleisiau Arfor",
-        Path("data/processed/lleisiau_arfor"),
+        Path("data/interim/lleisiau_arfor"),
         fetch_lleisiau_arfor,
     ),
 }
