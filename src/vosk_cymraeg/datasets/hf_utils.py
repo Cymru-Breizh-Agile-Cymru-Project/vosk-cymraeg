@@ -1,8 +1,10 @@
 import math
+from functools import reduce
 from io import BytesIO
 from pathlib import Path
 
 import datasets
+import polars as pl
 import soundfile as sf
 import sox
 from tqdm import tqdm
@@ -53,3 +55,19 @@ def dump_bytes_to_file(
         return_output=True,
     )
     return status
+
+
+def create_combined_split(
+    output_path: Path, dataset_splits: list[str], validate: bool = True
+) -> pl.DataFrame:
+    # Combine all datasets into one
+    dfs = [pl.read_csv(output_path / f"{split}.csv") for split in dataset_splits]
+    all_df = pl.concat(dfs)
+    total_length = reduce(lambda acc, df: acc + len(df), dfs, 0)
+
+    # Assert that there aren't any duplicate utterances
+    if validate:
+        assert len(all_df) == total_length
+        assert all_df["utterance"].is_unique().all()
+
+    return all_df
