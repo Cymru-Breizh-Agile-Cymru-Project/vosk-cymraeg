@@ -76,7 +76,6 @@ def main() -> None:
     # nonsilence_phones.txt
     nonsilence_phones_path = output_folder / "local/dict_nosp/nonsilence_phones.txt"
     with open(nonsilence_phones_path, "w", encoding="utf-8") as f:
-        pass
         for p in sorted(phones):
             f.write(f"{p}\n")
 
