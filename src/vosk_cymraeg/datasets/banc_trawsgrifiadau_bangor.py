@@ -1,4 +1,6 @@
 from pathlib import Path
+import os
+from dotenv import load_dotenv
 
 import datasets
 
@@ -11,12 +13,16 @@ from vosk_cymraeg.datasets.hf_utils import (
 def fetch_banc_trawsgrifiadau_bangor(output_path: Path) -> None:
     print("Fetching techiaith/banc-trawsgrifiadau-bangor from HuggingFace")
 
+    load_dotenv()
+    token = os.environ["HF_TOKEN"]
+    assert token
+
     speaker_count = 0
     dataset_splits = ["train", "validation", "test"]
 
     for split in dataset_splits:
         ds: datasets.Dataset = datasets.load_dataset(
-            "techiaith/banc-trawsgrifiadau-bangor", split=split
+            "techiaith/banc-trawsgrifiadau-bangor", split=split, token=token
         )
 
         # Since the data contains no speaker information we can treat all utterances as unique
