@@ -19,6 +19,16 @@ def main():
             output_path / f"{name}.csv"
         )
 
+    for dataset in ["banc", "cy/cy", "lleisiau_arfor"]:
+        src_clips = interim_path / Path(dataset).parent / "clips"
+        target_clips = output_path / "clips"
+        target_clips.mkdir(exist_ok=True)
+        for wav_file in src_clips.glob("*.wav"):
+            target_wav_file = target_clips / wav_file.name
+            if not target_wav_file.exists(): 
+                target_wav_file.symlink_to(wav_file.absolute())
+
+
     # Training set
     combine_and_write(
         "train", ["banc/train.csv", "cv/cy/train.csv", "lleisiau_arfor/train_clean.csv"]
