@@ -5,6 +5,10 @@ services:
       context: .
       dockerfile: ./Dockerfile
       args:
+        NAME: "Preben Vangberg"
+        AFFIL: "Bangor University"
+        EMAIL: "prv21fgt@bangor.ac.uk"
+        ADDRESS: "Bangor, UK"
         USERNAME: prv21fgt
         USER_UID: 1001
         USER_GID: 1001

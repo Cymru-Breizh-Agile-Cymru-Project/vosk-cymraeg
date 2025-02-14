@@ -6,8 +6,13 @@ RUN apt update
 RUN apt upgrade -y
 RUN apt install -y git wget make tar neovim fish gcc curl gawk
 
+ARG NAME="Preben Vangberg"
+ARG AFFIL="Bangor University"
+ARG EMAIL="prv21fgt@bangor.ac.uk"
+ARG ADDRESS="Bangor, UK"
+
 WORKDIR /opt/kaldi/tools
-RUN bash install_srilm.sh "Preben Vangberg" "Bangor University" "prv21fgt@bangor.ac.uk" "Bangor, UK"
+RUN bash install_srilm.sh "$NAME" "$AFFIL" "$EMAIL" "$ADDRESS"
 
 # Setup the user profile (these can be modified as required)
 ARG USERNAME=prv21fgt
