@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import List
 
 import polars as pl
-from rich.console import Console
+from text_process.normalise import cleanup_utf8_chars
 
 from vosk_cymraeg.utils import (
     remove_punctuation,
@@ -42,8 +42,18 @@ def main() -> None:
                     sub = sub.replace(special_tag, special_tag.replace(' ', '_'))
 
             # Normalize apostrophes
-            sub = sub.replace('’', "'")
-            sub = sub.replace('‘', "'")
+            sub = cleanup_utf8_chars(sub)
+            sub = (
+                sub.replace("*", "")
+                .replace("[anadl]", "<anadlu>")
+                .replace("<chwerthin)", "<chwerthin>")
+                .replace("{aneglur}", "<aneglur>")
+                .replace("{chwerthin}", "<chwerthin>")
+                .replace("–", "-")
+                .replace("¬", "-")
+                .replace("—", "-")
+                .replace("/", "")
+            )
 
             sub = remove_punctuation(sub).strip()
             if not sub:

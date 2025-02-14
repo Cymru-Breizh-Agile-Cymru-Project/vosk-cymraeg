@@ -19,7 +19,7 @@ def split_sentence(sentence: str) -> List[str]:
 
 
 
-VALID_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZÂÊÎÔŴŶÏ abcdefghijklmnopqrstuvwxyzâêîôŵŷï'-"
+VALID_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZÂÊÎÔÛŴŶÏÖ abcdefghijklmnopqrstuvwxyzâêîôûŵŷï'-<>_áéöòàäë"
 
 def get_non_domain_chars(sentence: str) -> set:
     chars = set(sentence)
