@@ -4,7 +4,10 @@ FROM kaldiasr/kaldi
 # (only curl is required for UV, the rest are for the developer)
 RUN apt update
 RUN apt upgrade -y
-RUN apt install -y git wget make tar neovim fish gcc curl
+RUN apt install -y git wget make tar neovim fish gcc curl gawk
+
+WORKDIR /opt/kaldi/tools
+RUN bash install_srilm.sh
 
 # Setup the user profile (these can be modified as required)
 ARG USERNAME=prv21fgt
