@@ -20,7 +20,7 @@ def main():
         )
 
     for dataset in ["banc", "cy/cy", "lleisiau_arfor"]:
-        src_clips = interim_path / Path(dataset).parent / "clips"
+        src_clips = interim_path / Path(dataset) / "clips"
         target_clips = output_path / "clips"
         target_clips.mkdir(exist_ok=True)
         for wav_file in src_clips.glob("*.wav"):
