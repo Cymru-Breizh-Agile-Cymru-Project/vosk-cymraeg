@@ -7,7 +7,7 @@ RUN apt upgrade -y
 RUN apt install -y git wget make tar neovim fish gcc curl gawk
 
 WORKDIR /opt/kaldi/tools
-RUN bash install_srilm.sh
+RUN bash install_srilm.sh "Preben Vangberg" "Bangor University" "prv21fgt@bangor.ac.uk" "Bangor, UK"
 
 # Setup the user profile (these can be modified as required)
 ARG USERNAME=prv21fgt
