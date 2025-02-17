@@ -10,6 +10,5 @@ wheels/
 .venv
 
 # Other stuff
-/data/
 *.env
 tmp

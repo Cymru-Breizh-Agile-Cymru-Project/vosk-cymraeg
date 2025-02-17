@@ -1,0 +1,6 @@
+[submodule "data/external/lecsicon-cymraeg-bangor"]
+	path = data/external/lecsicon-cymraeg-bangor
+	url = https://github.com/techiaith/lecsicon-cymraeg-bangor
+[submodule "data/external/geiriadur-ynganu-bangor"]
+	path = data/external/geiriadur-ynganu-bangor
+	url = https://github.com/techiaith/geiriadur-ynganu-bangor
