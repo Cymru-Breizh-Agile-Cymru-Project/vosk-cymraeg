@@ -10,7 +10,6 @@ from vosk_cymraeg.utils import (
     get_non_domain_chars,
     red,
     remove_punctuation,
-    split_sentence,
     yellow,
 )
 
@@ -21,52 +20,11 @@ def main() -> None:
     output_folder = Path("data/output")
 
     # Load merged corpora
-    train_dataset = pl.read_csv(args.train)
+    train_dataset = load_dataset(args.train)
 
     # Strip punctuation from sentences
-    unique_words = set()
-    sentences = set()
-    for row in train_dataset.rows():
-        sub_sentences = split_sentence(row[2])  # split_sentences does nothing atm
-        for sub in sub_sentences:
-            # Rename special tags containing spaces
-            # so they stay whole during tokenization
-            for special_tag in [
-                "<anadlu i mewn yn sydyn>",
-                "<chwythu allan>",
-                "<clirio gwddf>",
-            ]:
-                if special_tag in sub:
-                    sub = sub.replace(special_tag, special_tag.replace(" ", "_"))
-
-            # Normalize apostrophes
-            sub = cleanup_utf8_chars(sub)
-            sub = (
-                sub.replace("*", "")
-                .replace("[anadl]", "<anadlu>")
-                .replace("<chwerthin)", "<chwerthin>")
-                .replace("{aneglur}", "<aneglur>")
-                .replace("{chwerthin}", "<chwerthin>")
-                .replace("–", "-")
-                .replace("¬", "-")
-                .replace("—", "-")
-                .replace("/", "")
-            )
-
-            sub = remove_punctuation(sub).strip()
-            if not sub:
-                continue
-            invalid_chars = get_non_domain_chars(sub)
-            if invalid_chars:
-                print(
-                    yellow(f'Invalid chars {row[0]} [{"".join(invalid_chars)}] "{sub}"')
-                )
-                continue
-
-            sub = sub.lower()  # We could preserve capitalized words in the future
-
-            sentences.add(sub)
-            unique_words.update(sub.split())
+    sentences = set(train_dataset["sentence"].unique())
+    unique_words: set[str] ={word for s in sentences for word in s.split()}
 
     # We only provide the train dataset to build the text corpus
     build_text_corpus(sentences, output_folder)
@@ -95,7 +53,7 @@ def main() -> None:
     if args.dev:
         build_dataset(
             "dev",
-            pl.read_csv(args.dev),
+            load_dataset(args.dev),
             args.dev.parent / "clips",
             output_folder,
         )
@@ -103,7 +61,7 @@ def main() -> None:
     if args.test:
         build_dataset(
             "test",
-            pl.read_csv(args.test),
+            load_dataset(args.test),
             args.test.parent / "clips",
             output_folder,
         )
@@ -138,6 +96,52 @@ def _get_args() -> argparse.Namespace:
     # parser.add_argument("--output", default="output", help="Target folder for the Kaldi dataset", type=Path)
 
     return parser.parse_args()
+
+
+def load_dataset(path: Path) -> pl.DataFrame:
+    def filter(sentence: str) -> bool:
+        if not sentence:
+            return False
+        invalid_chars = get_non_domain_chars(sentence)
+        if invalid_chars:
+            print(yellow(f'Invalid chars [{"".join(invalid_chars)}] "{sentence}"'))
+            return False
+        return True
+
+    return (
+        pl.read_csv(path)
+        .with_columns(
+            pl.col("sentence").map_elements(normalise_sentence, return_dtype=str)
+        )
+        .filter(pl.col("sentence").map_elements(filter, return_dtype=bool))
+    )
+
+
+def normalise_sentence(s: str) -> str:
+    for special_tag in [
+        "<anadlu i mewn yn sydyn>",
+        "<chwythu allan>",
+        "<clirio gwddf>",
+    ]:
+        if special_tag in s:
+            s = s.replace(special_tag, special_tag.replace(" ", "_"))
+
+    # Normalize apostrophes
+    s = cleanup_utf8_chars(s)
+    s = (
+        s.replace("*", "")
+        .replace("[anadl]", "<anadlu>")
+        .replace("<chwerthin)", "<chwerthin>")
+        .replace("{aneglur}", "<aneglur>")
+        .replace("{chwerthin}", "<chwerthin>")
+        .replace("–", "-")
+        .replace("¬", "-")
+        .replace("—", "-")
+        .replace("/", "")
+    )
+
+    s = remove_punctuation(s).strip()
+    return s.lower()  # We could preserve capitalized words in the future
 
 
 def build_text_corpus(sentences: List[str], output_path: Path) -> None:
