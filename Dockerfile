@@ -1,10 +1,11 @@
-FROM kaldiasr/kaldi
+FROM kaldiasr/kaldi:gpu-latest
 
 # Install apt packages
 # (only curl is required for UV, the rest are for the developer)
 RUN apt update
 RUN apt upgrade -y
-RUN apt install -y git wget make tar neovim fish gcc curl gawk
+RUN apt install -y git wget make tar neovim fish gcc curl gawk python2
+RUN ln -s python2 /usr/bin/python
 
 ARG NAME="Preben Vangberg"
 ARG AFFIL="Bangor University"
