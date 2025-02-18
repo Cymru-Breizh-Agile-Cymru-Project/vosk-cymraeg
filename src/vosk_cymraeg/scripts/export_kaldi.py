@@ -5,7 +5,7 @@ from typing import List
 import polars as pl
 from text_process.normalise import cleanup_utf8_chars
 
-from vosk_cymraeg.phonemizer import phonemize
+from vosk_cymraeg.phonetics.phonemizer import Phonemizer
 from vosk_cymraeg.utils import (
     get_non_domain_chars,
     red,
@@ -24,7 +24,7 @@ def main() -> None:
 
     # Strip punctuation from sentences
     sentences = set(train_dataset["sentence"].unique())
-    unique_words: set[str] ={word for s in sentences for word in s.split()}
+    unique_words: set[str] = {word for s in sentences for word in s.split()}
 
     # We only provide the train dataset to build the text corpus
     build_text_corpus(sentences, output_folder)
@@ -138,6 +138,7 @@ def normalise_sentence(s: str) -> str:
         .replace("¬", "-")
         .replace("—", "-")
         .replace("/", "")
+        .replace("''", "'")
     )
 
     s = remove_punctuation(s).strip()
@@ -194,7 +195,7 @@ def build_lexicon(words: set[str], output_path: Path) -> None:
     output_path.mkdir(exist_ok=True, parents=True)
 
     phone_set = set()
-
+    phonemizer = Phonemizer()
     with open(output_path / "lexicon.txt", "w", encoding="utf-8") as _f:
         # Write special phones
         _f.write("!SIL SIL\n<UNK> SPN\n")
@@ -203,13 +204,17 @@ def build_lexicon(words: set[str], output_path: Path) -> None:
 
         # Write regular words with corresponding phones
         for word in sorted(words):
-            phones = phonemize(word)
-            if phones:
-                _f.write(f"{word} {' '.join(phones)}\n")
-                phone_set.update(phones)
-            else:
+            pronunciations = phonemizer.phonemize(word)
+            pronunciations = [
+                [char for char in pron if char] for pron in pronunciations
+            ]
+            pronunciations = [pron for pron in pronunciations if pron]
+            if len(pronunciations) == 0:
                 print(red(f"Could not phonemize '{word}'"))
-
+                continue
+            for pronunciation in pronunciations:
+                _f.write(f"{word} {' '.join(pronunciation)}\n")
+                phone_set.update(pronunciation)
     print("done")
     return phone_set
 
