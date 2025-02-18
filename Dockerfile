@@ -4,7 +4,23 @@ FROM kaldiasr/kaldi:gpu-latest
 # (only curl is required for UV, the rest are for the developer)
 RUN apt update
 RUN apt upgrade -y
-RUN apt install -y git wget make tar neovim fish gcc curl gawk python2
+RUN apt install -y \
+    curl \
+    fish \
+    gawk \
+    gcc \ 
+    git \
+    locales \
+    make \
+    neovim \
+    python2 \
+    tar \
+    wget
+
+# Install en_US.UTF-8 (see issue #17)
+RUN locale-gen en_US.UTF-8
+
+# Force python to refer to python2
 RUN ln -s python2 /usr/bin/python
 
 ARG NAME="Preben Vangberg"
