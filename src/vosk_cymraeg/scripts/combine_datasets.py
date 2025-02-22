@@ -19,7 +19,7 @@ def main():
             output_path / f"{name}.csv"
         )
 
-    for dataset in ["banc", "cy/cy", "lleisiau_arfor"]:
+    for dataset in ["banc", "cv/cy", "lleisiau_arfor"]:
         src_clips = interim_path / Path(dataset) / "clips"
         target_clips = output_path / "clips"
         target_clips.mkdir(exist_ok=True)
