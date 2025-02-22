@@ -1,4 +1,44 @@
-FROM kaldiasr/kaldi:gpu-latest
+FROM nvidia/cuda:12.2.0-devel-ubuntu22.04
+LABEL maintainer="jtrmal@apptek.com"
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        build-essential \
+        g++ \
+        make \
+        automake \
+        bzip2 \
+        unzip \
+        wget \
+        libtool \
+        git \
+        python3 \
+        zlib1g-dev \
+        ca-certificates \
+        gfortran \
+        patch \
+        sox \
+        software-properties-common && \
+        apt-add-repository multiverse && \
+        apt-get update && \
+        yes | DEBIAN_FRONTEND=noninteractive apt-get install -yqq --no-install-recommends\
+            intel-mkl && \
+    rm -rf /var/lib/apt/lists/*
+
+
+RUN git clone https://github.com/kaldi-asr/kaldi.git /opt/kaldi
+WORKDIR /opt/kaldi/tools
+RUN git reset --hard 6f6139300b448e9ffc5abb04f2028928404be55c
+RUN make -j $(nproc)
+
+WORKDIR /opt/kaldi/src
+RUN ./configure --shared --use-cuda=yes
+RUN make depend -j $(nproc)
+RUN make -j $(nproc)
+RUN find /opt/kaldi  -type f \( -name "*.o" -o -name "*.la" -o -name "*.a" \) -exec rm {} \;
+RUN rm -rf /opt/kaldi/.git
+
+WORKDIR /opt/kaldi/
 
 # Install apt packages
 # (only curl is required for UV, the rest are for the developer)
@@ -13,7 +53,7 @@ RUN apt install -y \
     locales \
     make \
     neovim \
-    python2 \
+ 	python2.7 \
     tar \
     wget
 

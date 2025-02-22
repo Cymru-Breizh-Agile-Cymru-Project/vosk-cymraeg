@@ -10,8 +10,8 @@ services:
         EMAIL: "prv21fgt@bangor.ac.uk"
         ADDRESS: "Bangor, UK"
         USERNAME: prv21fgt
-        USER_UID: 1001
-        USER_GID: 1001
+        USER_UID: 1004
+        USER_GID: 1005
     volumes:
       - .:/workspaces/vosk
     stdin_open: true
