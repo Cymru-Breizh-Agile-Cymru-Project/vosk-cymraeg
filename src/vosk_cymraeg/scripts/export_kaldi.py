@@ -48,13 +48,12 @@ def main() -> None:
         f.write("SIL\n")
 
     # Build files specific to train/test datasets
-    build_dataset("train", train_dataset, args.train.parent / "clips", output_folder)
+    build_dataset("train", train_dataset, output_folder)
 
     if args.dev:
         build_dataset(
             "dev",
             load_dataset(args.dev),
-            args.dev.parent / "clips",
             output_folder,
         )
 
@@ -62,7 +61,6 @@ def main() -> None:
         build_dataset(
             "test",
             load_dataset(args.test),
-            args.test.parent / "clips",
             output_folder,
         )
 
@@ -220,7 +218,7 @@ def build_lexicon(words: set[str], output_path: Path) -> None:
 
 
 def build_dataset(
-    name: str, df: pl.DataFrame, clips_path: Path, output_path: Path
+    name: str, df: pl.DataFrame, output_path: Path
 ) -> None:
     """Generate Kaldi data for one sub-corpus, should be called for each split"""
 
@@ -231,19 +229,19 @@ def build_dataset(
 
     # Build 'text' file
     with open(dataset_path / "text", "w", encoding="utf-8") as _f:
-        for row in df.rows():
-            sentence = remove_punctuation(row[2]).strip()
-            _f.write(f"{row[1]}\t{sentence}\n")
+        for row in df.rows(named=True):
+            sentence = remove_punctuation(row['sentence']).strip()
+            _f.write(f"{row['utterance']}\t{sentence}\n")
 
     # Build 'utt2spk'
     with open(dataset_path / "utt2spk", "w", encoding="utf-8") as _f:
-        for row in df.sort("utterance").rows():
-            _f.write(f"{row[1]}\t{row[0]}\n")
+        for row in df.sort("utterance").rows(named=True):
+            _f.write(f"{row['utterance']}\t{row['speaker']}\n")
 
     # Build 'wav.scp'
     with open(dataset_path / "wav.scp", "w", encoding="utf-8") as _f:
-        for row in df.sort("utterance").rows():
-            audio_path = clips_path / (row[1] + ".wav")
-            _f.write(f"{row[1]}\t{audio_path.absolute()}\n")
+        for row in df.sort("path").rows(named=True):
+            audio_path = Path(row['path']).resolve()
+            _f.write(f"{row['utterance']}\t{audio_path.resolve()}\n")
 
     print("done")
