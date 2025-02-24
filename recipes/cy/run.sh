@@ -27,9 +27,9 @@ if [ $stage -eq -1 ]; then
     # Removing previously created data (from last run.sh execution)
     rm -rf exp mfcc data
     
-    # Copying data folder from ostilhoù
+    # Copying data folder from the workspace output
     echo "Copying data folder"
-    cp -r /home/gweltaz/bangor/vosk-cymraeg/data/output data
+    cp -r /workspaces/vosk/data/output/ data
     
     # Needs to be prepared by hand (or using self written scripts):
     #
@@ -39,8 +39,8 @@ if [ $stage -eq -1 ]; then
     # utt2spk     [<uterranceID> <speakerID>]
     # corpus.txt  [<text_transcription>]
    
-    #python3 build_kaldi_files.py corpus/train || exit 1
-    #python3 build_kaldi_files.py corpus/test || exit 1
+    # That would be a good place to execute the Python data preparation scripts
+    # and copy the generated metadata in the recipe `data` folder
 fi
 
 if [ $stage -ge 0 ]; then
@@ -48,17 +48,14 @@ if [ $stage -ge 0 ]; then
     echo "===== VALIDATING DATA ====="
     echo
     
-    # Making spk2utt files
-    utils/utt2spk_to_spk2utt.pl data/train/utt2spk > data/train/spk2utt
-    utils/utt2spk_to_spk2utt.pl data/test/utt2spk > data/test/spk2utt
-    
-    echo
-    utils/validate_data_dir.sh --no-feats data/train
-    utils/validate_data_dir.sh --no-feats data/test
-    
-    utils/fix_data_dir.sh data/train          # tool for data proper sorting if needed - here: for data/train directory
-    utils/fix_data_dir.sh data/test
-    
+    for split in train dev test; do
+        # Making spk2utt files
+        utils/utt2spk_to_spk2utt.pl data/$split/utt2spk > data/$split/spk2utt
+        echo
+        utils/validate_data_dir.sh --no-feats data/$split
+        utils/fix_data_dir.sh data/$split          # tool for data proper sorting if needed - here: for data/train directory
+    done
+        
     utils/prepare_lang.sh data/local/dict_nosp "<UNK>" data/local/lang_tmp_nosp data/lang_nosp
     utils/validate_lang.pl data/lang_nosp
     utils/validate_dict_dir.pl data/local/dict_nosp
@@ -69,15 +66,14 @@ if [ $stage -ge 1 ]; then
     echo
     echo "===== FEATURES EXTRACTION ====="
     echo
-    # Making feats.scp files
     mfccdir=mfcc
     
-    steps/make_mfcc.sh --nj $nj --cmd "$train_cmd" data/train exp/make_mfcc/train $mfccdir
-    steps/make_mfcc.sh --nj $nj --cmd "$train_cmd" data/test exp/make_mfcc/test $mfccdir
-    
-    # Making cmvn.scp files
-    steps/compute_cmvn_stats.sh data/train exp/make_mfcc/train $mfccdir
-    steps/compute_cmvn_stats.sh data/test exp/make_mfcc/test $mfccdir
+    for split in train dev test; do
+        # Making feats.scp files
+        steps/make_mfcc.sh --nj $nj --cmd "$train_cmd" data/$split exp/make_mfcc/$split $mfccdir || exit 1;
+        # Making cmvn.scp files
+        steps/compute_cmvn_stats.sh data/$split exp/make_mfcc/$split $mfccdir || exit 1;
+    done
 fi
 
 
@@ -138,10 +134,11 @@ if [ $stage -ge 4 ]; then
                         data/train data/lang_nosp exp/mono  || exit 1
 
     echo
+    # The decode step is optional
     echo "===== MONO DECODING ====="
     echo
     utils/mkgraph.sh --mono data/lang_nosp exp/mono exp/mono/graph || exit 1
-    #steps/decode.sh --config conf/decode.config --nj $nj --cmd "$decode_cmd" exp/mono/graph data/test exp/mono/decode
+    steps/decode.sh --config conf/decode.config --nj $nj --cmd "$decode_cmd" exp/mono/graph data/dev exp/mono/decode
     echo
     echo "===== MONO ALIGNMENT ====="
     echo
@@ -156,10 +153,11 @@ if [ $stage -ge 5 ]; then
     # Set to 2000 HMM states an 11000 Gaussians
     steps/train_deltas.sh --boost-silence 1.25 --cmd "$train_cmd" 2000 10000 data/train data/lang_nosp exp/mono_ali_train exp/tri1 || exit 1
     echo
+    # The decode step is optional
     echo "===== TRI1 (first triphone pass) DECODING ====="
     echo
     utils/mkgraph.sh data/lang_nosp exp/tri1 exp/tri1/graph || exit 1
-    #steps/decode.sh --config conf/decode.config --nj $nj --cmd "$decode_cmd" exp/tri1/graph data/test exp/tri1/decode
+    steps/decode.sh --config conf/decode.config --nj $nj --cmd "$decode_cmd" exp/tri1/graph data/dev exp/tri1/decode
     echo
     echo "===== TRI1 ALIGNMENT ====="
     echo
@@ -238,17 +236,17 @@ if [ $stage -ge 9 ]; then
     
     echo "****** decode_fmllr.sh ******"
     steps/decode_fmllr.sh --nj $nj --cmd "$decode_cmd" \
-                          exp/tri3b/graph_tgsmall data/test \
+                          exp/tri3b/graph_tgsmall data/dev \
                           exp/tri3b/decode_tgsmall_test
     
     echo "****** lmrescore.sh ******"
     steps/lmrescore.sh --cmd "$decode_cmd" data/lang_test_{tgsmall,tgmed} \
-                       data/test exp/tri3b/decode_{tgsmall,tgmed}_test
+                       data/dev exp/tri3b/decode_{tgsmall,tgmed}_test
     
     echo "****** lmrescore_const_arpa.sh ******"
     steps/lmrescore_const_arpa.sh \
         --cmd "$decode_cmd" data/lang_test_{tgsmall,tglarge} \
-        data/test exp/tri3b/decode_{tgsmall,tglarge}_test
+        data/dev exp/tri3b/decode_{tgsmall,tglarge}_test
 fi
 
 
