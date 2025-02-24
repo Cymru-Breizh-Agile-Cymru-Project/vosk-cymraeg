@@ -32,12 +32,13 @@ def fetch_lleisiau_arfor(output_path: Path) -> None:
         )
         speaker_count += len(ds)
 
-        dump_dataset_audio_files(ds, output_path)
+        ds = ds.add_column("path", dump_dataset_audio_files(ds, output_path))
 
         # Audio can then be dumped to save memory
         ds = ds.remove_columns("audio")
         ds.to_csv(
-            output_path / f"{split}.csv", columns=["speaker", "utterance", "sentence"]
+            output_path / f"{split}.csv",
+            columns=["speaker", "utterance", "path", "sentence"],
         )
 
     # Combine all datasets into one

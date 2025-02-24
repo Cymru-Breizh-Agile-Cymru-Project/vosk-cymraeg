@@ -12,8 +12,11 @@ from tqdm import tqdm
 
 def dump_dataset_audio_files(
     ds: datasets.Dataset, output_path: Path, batch_size: int = 1000
-):
+) -> Path:
     number_of_batches = math.ceil(len(ds) / batch_size)
+
+    # Produced paths to return later
+    paths = []
 
     # Batch dumps all of the bytes in audio
     for batch in tqdm(
@@ -28,7 +31,10 @@ def dump_dataset_audio_files(
             desc="Converting clips",
         ):
             file_path = output_path / "clips" / f"{row['utterance']}.wav"
+            paths.append(str(file_path))
             dump_bytes_to_file(row["audio"]["bytes"], file_path)
+
+    return paths
 
 
 def dump_bytes_to_file(

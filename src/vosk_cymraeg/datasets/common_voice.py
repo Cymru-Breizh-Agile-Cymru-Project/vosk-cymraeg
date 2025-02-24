@@ -27,14 +27,19 @@ def process_common_voice(input_path: Path, output_path: Path) -> None:
         )
 
         # Loop through each file and convert from mp3 to wav
+        converted_paths = []
         for row in tqdm(df.rows(named=True), desc="Converting files"):
+            new_path = output_path / "clips" / f"{row['utterance']}.wav"
+            converted_paths.append(str(new_path))
             convert_file(
                 input_path / "clips" / row["path"],
-                output_path / "clips" / f"{row['utterance']}.wav",
+                new_path,
             )
 
+        df = df.with_columns(pl.Series("path", converted_paths))
+
         # Select only the stuff we need and write to a csv file
-        df.select(["speaker", "utterance", "sentence"]).write_csv(
+        df.select(["speaker", "utterance", "path", "sentence"]).write_csv(
             output_path / f"{split}.csv"
         )
 
