@@ -12,3 +12,5 @@ wheels/
 # Other stuff
 *.env
 tmp
+models
+*.tar.gz
