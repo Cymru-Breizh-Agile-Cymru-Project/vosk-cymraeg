@@ -114,8 +114,6 @@ def load_dataset(path: Path) -> pl.DataFrame:
             pl.col("sentence").map_elements(normalise_sentence, return_dtype=str)
         )
         .filter(pl.col("sentence").map_elements(filter, return_dtype=bool))
-        .filter(pl.col("speaker").str.starts_with("lla"))
-        .head(500)
     )
 
 
