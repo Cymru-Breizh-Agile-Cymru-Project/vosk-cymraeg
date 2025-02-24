@@ -1,5 +1,5 @@
 FROM nvidia/cuda:12.2.0-devel-ubuntu22.04
-LABEL maintainer="jtrmal@apptek.com"
+LABEL maintainer="prv21fgt@bangor.ac.uk"
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -50,6 +50,7 @@ RUN apt install -y \
     gawk \
     gcc \ 
     git \
+	libsox-fmt-mp3 \
     locales \
     make \
     neovim \
@@ -61,7 +62,7 @@ RUN apt install -y \
 RUN locale-gen en_US.UTF-8
 
 # Force python to refer to python2
-RUN ln -s python2 /usr/bin/python
+RUN ln -s python2.7 /usr/bin/python
 
 ARG NAME="Preben Vangberg"
 ARG AFFIL="Bangor University"
@@ -84,6 +85,11 @@ RUN groupadd --gid $USER_GID $USERNAME \
     && apt-get install -y sudo \
     && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
     && chmod 0440 /etc/sudoers.d/$USERNAME
+
+# Copy the recipe and set the owner
+ARG RECIPE=cy
+ADD recipes/$RECIPE /opt/kaldi/egs/$RECIPE
+RUN chown -R $USER_UID:$USER_GID /opt/kaldi/egs/$RECIPE
 
 # Change the default shell
 RUN chsh -s /usr/bin/fish $USERNAME
