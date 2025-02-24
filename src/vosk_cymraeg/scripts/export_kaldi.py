@@ -3,16 +3,10 @@ from pathlib import Path
 from typing import List
 
 import polars as pl
+from rich import print
 
+from vosk_cymraeg.normalisation import get_non_domain_chars, normalise_sentence
 from vosk_cymraeg.phonetics.phonemizer import Phonemizer
-from vosk_cymraeg.normalisation import (
-    normalise_sentence,
-    get_non_domain_chars
-)
-from vosk_cymraeg.utils import (
-    red,
-    yellow,
-)
 
 
 def main() -> None:
@@ -103,7 +97,7 @@ def load_dataset(path: Path) -> pl.DataFrame:
             return False
         invalid_chars = get_non_domain_chars(sentence)
         if invalid_chars:
-            print(yellow(f'Invalid chars [{"".join(invalid_chars)}] "{sentence}"'))
+            print(f'[yellow]Invalid chars [{"".join(invalid_chars)}] "{sentence}"')
             return False
         return True
 
@@ -181,7 +175,7 @@ def build_lexicon(words: set[str], output_path: Path) -> None:
             ]
             pronunciations = [pron for pron in pronunciations if pron]
             if len(pronunciations) == 0:
-                print(red(f"Could not phonemize '{word}'"))
+                print(f"[red]Could not phonemize {word!r}")
                 continue
             for pronunciation in pronunciations:
                 _f.write(f"{word} {' '.join(pronunciation)}\n")
