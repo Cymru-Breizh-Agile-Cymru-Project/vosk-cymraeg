@@ -3,13 +3,14 @@ from pathlib import Path
 from typing import List
 
 import polars as pl
-from text_process.normalise import cleanup_utf8_chars
 
 from vosk_cymraeg.phonetics.phonemizer import Phonemizer
+from vosk_cymraeg.normalisation import (
+    normalise_sentence,
+    get_non_domain_chars
+)
 from vosk_cymraeg.utils import (
-    get_non_domain_chars,
     red,
-    remove_punctuation,
     yellow,
 )
 
@@ -115,34 +116,6 @@ def load_dataset(path: Path) -> pl.DataFrame:
     )
 
 
-def normalise_sentence(s: str) -> str:
-    for special_tag in [
-        "<anadlu i mewn yn sydyn>",
-        "<chwythu allan>",
-        "<clirio gwddf>",
-    ]:
-        if special_tag in s:
-            s = s.replace(special_tag, special_tag.replace(" ", "_"))
-
-    # Normalize apostrophes
-    s = cleanup_utf8_chars(s)
-    s = (
-        s.replace("*", "")
-        .replace("[anadl]", "<anadlu>")
-        .replace("<chwerthin)", "<chwerthin>")
-        .replace("{aneglur}", "<aneglur>")
-        .replace("{chwerthin}", "<chwerthin>")
-        .replace("–", "-")
-        .replace("¬", "-")
-        .replace("—", "-")
-        .replace("/", "")
-        .replace("''", "'")
-    )
-
-    s = remove_punctuation(s).strip()
-    return s.lower()  # We could preserve capitalized words in the future
-
-
 def build_text_corpus(sentences: List[str], output_path: Path) -> None:
     """Build the text corpus"""
 
@@ -217,9 +190,7 @@ def build_lexicon(words: set[str], output_path: Path) -> None:
     return phone_set
 
 
-def build_dataset(
-    name: str, df: pl.DataFrame, output_path: Path
-) -> None:
+def build_dataset(name: str, df: pl.DataFrame, output_path: Path) -> None:
     """Generate Kaldi data for one sub-corpus, should be called for each split"""
 
     dataset_path = output_path / name
@@ -230,7 +201,7 @@ def build_dataset(
     # Build 'text' file
     with open(dataset_path / "text", "w", encoding="utf-8") as _f:
         for row in df.rows(named=True):
-            sentence = remove_punctuation(row['sentence']).strip()
+            sentence = row["sentence"].strip()
             _f.write(f"{row['utterance']}\t{sentence}\n")
 
     # Build 'utt2spk'
@@ -241,7 +212,7 @@ def build_dataset(
     # Build 'wav.scp'
     with open(dataset_path / "wav.scp", "w", encoding="utf-8") as _f:
         for row in df.sort("path").rows(named=True):
-            audio_path = Path(row['path']).resolve()
+            audio_path = Path(row["path"]).resolve()
             _f.write(f"{row['utterance']}\t{audio_path.resolve()}\n")
 
     print("done")

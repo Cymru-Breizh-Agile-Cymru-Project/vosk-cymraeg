@@ -1,21 +1,3 @@
-def remove_punctuation(sentence: str) -> str:
-    kept_chars = []
-    for c in sentence:
-        if c in ',.?!…;:"':
-            continue
-        kept_chars.append(c)
-    cleaned = "".join(kept_chars)
-    return " ".join(cleaned.split())  # Remove multi-spaces
-
-
-VALID_CHARS = (
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZÂÊÎÔÛŴŶÏÖ abcdefghijklmnopqrstuvwxyzâêîôûŵŷï'-<>_áéöòàäë"
-)
-
-
-def get_non_domain_chars(sentence: str) -> set:
-    chars = set(sentence)
-    return chars.difference(VALID_CHARS)
 
 
 RESET = "\033[0m"
