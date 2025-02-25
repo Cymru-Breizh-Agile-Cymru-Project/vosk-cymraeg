@@ -651,8 +651,8 @@ def get_type_of_w(phones, parts, i, pre, now, post, tail, tailstr, apostrophePar
 	elif (is_simple_vowel_cluster(pre) or pre == 'i') and (is_simple_vowel_cluster(post) or post == 'i'):
 		return 'w'
 	else:
-	    print("get_type_of_w: This code should never be reached: ", locals(), file=sys.stderr)
-
+	    #print("get_type_of_w: This code should never be reached: ", locals(), file=sys.stderr)
+		pass
 
 
 if __name__ == '__main__':

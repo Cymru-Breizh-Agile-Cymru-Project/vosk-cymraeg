@@ -1,6 +1,7 @@
 import re
 from io import StringIO
 from pathlib import Path
+from typing import Protocol
 
 import polars as pl
 import requests
@@ -8,7 +9,11 @@ import requests
 from vosk_cymraeg.phonetics.llef_py3 import get_unstressed_phones
 
 
-class Phonemizer:
+class Phonemizer(Protocol):
+    def phonemize(self, word: str) -> list[list[str]]: ...
+
+
+class CyPhonemizer:
     def __init__(self):
         """Loads Geiriadur Ynganu Bangor into memory and a pronunciation loopup table for llef_py3.py"""
         PATTERN = re.compile("([^ ]+) (.+) (/.*/)")
@@ -51,3 +56,30 @@ class Phonemizer:
             ]
         except TypeError:
             return []
+
+
+class EnPhonemizer:
+    def __init__(self):
+        PATTERN = re.compile("([^ ]+) \(.+\) (.+) (/.*/)")
+        text = Path(
+            "data/external/geiriadur-ynganu-bangor/bangordict.en.dict"
+        ).read_text()
+        words = []
+        for line in text.splitlines():
+            res = PATTERN.fullmatch(line)
+            words.append(
+                (
+                    res.group(1),
+                    res.group(2).replace("'", "").replace("-", "").split(),
+                    res.group(3),
+                )
+            )
+        self._table = pl.DataFrame(
+            words, orient="row", schema=["Word", "Pronunciation", "IPA"]
+        )
+
+    def phonemize(self, word: str) -> list[list[str]]:
+        res = self._table.filter(pl.col("Word") == word)
+        if len(res):
+            return res["Pronunciation"].to_list()
+        return []

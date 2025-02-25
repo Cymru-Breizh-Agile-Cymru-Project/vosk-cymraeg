@@ -2,11 +2,12 @@ import argparse
 from pathlib import Path
 from typing import List
 
+import datasets
 import polars as pl
 from rich import print
 
 from vosk_cymraeg.normalisation import get_non_domain_chars, normalise_sentence
-from vosk_cymraeg.phonetics.phonemizer import Phonemizer
+from vosk_cymraeg.phonetics.phonemizer import CyPhonemizer, EnPhonemizer, Phonemizer
 
 
 def main() -> None:
@@ -17,14 +18,42 @@ def main() -> None:
     # Load merged corpora
     train_dataset = load_dataset(args.train)
 
-    # Strip punctuation from sentences
-    sentences = set(train_dataset["sentence"].unique())
-    unique_words: set[str] = {word for s in sentences for word in s.split()}
+    # Load sentences from the training dataset (all should be Welsh)
+    sentences = pl.DataFrame(
+        {"sentence": list(train_dataset["sentence"].unique()), "lang": "cy"}
+    )
+
+    # Load sentences from the tts prompts dataset
+    tts_prompts = (
+        datasets.load_dataset("str20tbl/tts-prompts-cy-en", split="train")
+        .to_polars()
+        .with_columns(
+            pl.col("Sentence").map_elements(normalise_sentence, return_dtype=pl.String),
+        )
+        .rename({"Lang": "lang", "Sentence": "sentence"})
+        .select(["sentence", "lang"])
+    )
+
+    # Add the tts prompts
+    sentences = pl.concat([sentences, tts_prompts]).unique()
+
+    # Generate a word list based on the sentences in the sentences dataframe
+    words = (
+        sentences.lazy()
+        .with_columns(pl.col("sentence").str.split(" "))
+        .explode("sentence")
+        .unique()
+        .sort(["lang", "sentence"])
+        .rename({"sentence": "word"})
+        .collect()
+    )
+
+    print(f"Loaded {len(words)} number of words")
 
     # We only provide the train dataset to build the text corpus
-    build_text_corpus(sentences, output_folder)
+    build_text_corpus(sentences["sentence"].unique(), output_folder)
 
-    phones = build_lexicon(unique_words, output_folder)
+    phones = build_lexicon(words, output_folder)
 
     # nonsilence_phones.txt
     nonsilence_phones_path = output_folder / "local/dict_nosp/nonsilence_phones.txt"
@@ -125,7 +154,7 @@ def build_text_corpus(sentences: List[str], output_path: Path) -> None:
     print("done")
 
 
-def build_lexicon(words: set[str], output_path: Path) -> None:
+def build_lexicon(words: pl.DataFrame, output_path: Path) -> None:
     """
     Build a lexicon from a list of words
 
@@ -160,7 +189,47 @@ def build_lexicon(words: set[str], output_path: Path) -> None:
     output_path.mkdir(exist_ok=True, parents=True)
 
     phone_set = set()
-    phonemizer = Phonemizer()
+    phonemizers: dict[str, Phonemizer] = {"cy": CyPhonemizer(), "en": EnPhonemizer()}
+
+    def get_pronunciation(data) -> list[list[str]]:
+        word = data["word"]
+        langs = data["lang"]
+        pronunciations = [
+            pronunciation
+            for lang in langs
+            for pronunciation in phonemizers[lang].phonemize(word)
+        ]
+
+        # Remove empty phones
+        pronunciations = [[char for char in pron if char] for pron in pronunciations]
+        # Remove empty pronunciations
+        pronunciations = [pron for pron in pronunciations if pron]
+        if len(pronunciations) == 0 and "cy" in langs:
+            print(f"[red]Failed to phonemize {word!r}")
+
+        return pronunciations
+
+    # We need to group these by the word because we need to
+    # produce all of the pronunciations for the same word
+    # at the same time to make sure that there are no duplicates
+    words = (
+        words.lazy()
+        .group_by("word")
+        .all()
+        .sort("word")
+        .with_columns(
+            pl.struct("word", "lang")
+            .map_elements(get_pronunciation, pl.List(pl.List(pl.String)))
+            .alias("pronunciation")
+        )
+        .filter(pl.col("pronunciation").list.len() > 0)
+        .drop("lang")
+        .explode("pronunciation")
+        .unique(["word", "pronunciation"])
+        .sort("word", pl.col("pronunciation").list.join(" "))
+        .collect()
+    )
+
     with open(output_path / "lexicon.txt", "w", encoding="utf-8") as _f:
         # Write special phones
         _f.write("!SIL SIL\n<UNK> SPN\n")
@@ -168,18 +237,10 @@ def build_lexicon(words: set[str], output_path: Path) -> None:
             _f.write(f"{tag} {special_tags[tag]}\n")
 
         # Write regular words with corresponding phones
-        for word in sorted(words):
-            pronunciations = phonemizer.phonemize(word)
-            pronunciations = [
-                [char for char in pron if char] for pron in pronunciations
-            ]
-            pronunciations = [pron for pron in pronunciations if pron]
-            if len(pronunciations) == 0:
-                print(f"[red]Could not phonemize {word!r}")
-                continue
-            for pronunciation in pronunciations:
-                _f.write(f"{word} {' '.join(pronunciation)}\n")
-                phone_set.update(pronunciation)
+        for word, pronunciation in words.rows():
+            _f.write(f"{word} {' '.join(pronunciation)}\n")
+            phone_set.update(pronunciation)
+
     print("done")
     return phone_set
 
