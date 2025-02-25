@@ -1,13 +1,18 @@
 import argparse
+import re
 from pathlib import Path
 from typing import List
 
-import datasets
 import polars as pl
 from rich import print
 
+import vosk_cymraeg.datasets.techiaith_text as techiaith_text
 from vosk_cymraeg.normalisation import get_non_domain_chars, normalise_sentence
 from vosk_cymraeg.phonetics.phonemizer import CyPhonemizer, EnPhonemizer, Phonemizer
+
+URL_PATTERN = re.compile(
+    r"([a-z]+:\/\/)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)"
+)
 
 
 def main() -> None:
@@ -16,34 +21,38 @@ def main() -> None:
     if len(args.lang) == 0:
         raise ValueError("You need to provide at least one language")
 
-    print(args.lang)
     output_folder = Path("data/output")
 
     # Load merged corpora
+    print("Loading training set from disk")
     train_dataset = load_dataset(args.train, args.lang)
 
     # Load sentences from the training dataset (all should be Welsh)
+    print("Loading sentences from training set and additional sources")
     sentences = pl.DataFrame(
         {"sentence": list(train_dataset["sentence"].unique()), "lang": "cy"}
     )
 
     # Load sentences from the tts prompts dataset
-    tts_prompts = (
-        datasets.load_dataset("str20tbl/tts-prompts-cy-en", split="train")
-        .to_polars()
-        .with_columns(
-            pl.col("Sentence").map_elements(normalise_sentence, return_dtype=pl.String),
-        )
-        .rename({"Lang": "lang", "Sentence": "sentence"})
-        .select(["sentence", "lang"])
-        .filter(pl.col("lang").is_in(args.lang))
-    )
-
-    # Add the tts prompts
     sentences = (
-        pl.concat([sentences, tts_prompts])
-        .unique()
+        pl.concat(
+            [
+                sentences,
+                techiaith_text.load_techiaith_cofnodycynulliad_en_cy(),
+                techiaith_text.load_techiaith_legislation_gov_uk_en_cy(),
+                techiaith_text.load_techiaith_llyw_cymru_en_cy_ogl(),
+                techiaith_text.load_str20tbl_tts_prompts_cy_en(),
+            ]
+        )
         .filter(pl.col("lang").is_in(args.lang))
+        .unique()
+        .filter(
+            pl.col("sentence").map_elements(
+                lambda x: URL_PATTERN.search(x) is None, pl.Boolean
+            )
+        )
+        .with_columns(pl.col("sentence").map_elements(normalise_sentence, pl.String))
+        .filter(pl.col("sentence").map_elements(filter, pl.Boolean))
     )
 
     # Generate a word list based on the sentences in the sentences dataframe
@@ -98,6 +107,16 @@ def main() -> None:
         )
 
 
+def filter(sentence: str) -> bool:
+    if not sentence:
+        return False
+    invalid_chars = get_non_domain_chars(sentence)
+    if invalid_chars:
+        # print(f'[yellow]Invalid chars [{"".join(invalid_chars)}] "{sentence}"')
+        return False
+    return True
+
+
 def _get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         "export",
@@ -137,15 +156,6 @@ def _get_args() -> argparse.Namespace:
 
 
 def load_dataset(path: Path, langs: list[str]) -> pl.DataFrame:
-    def filter(sentence: str) -> bool:
-        if not sentence:
-            return False
-        invalid_chars = get_non_domain_chars(sentence)
-        if invalid_chars:
-            print(f'[yellow]Invalid chars [{"".join(invalid_chars)}] "{sentence}"')
-            return False
-        return True
-
     return (
         pl.read_csv(path)
         .filter(pl.col("lang").is_in(langs))
