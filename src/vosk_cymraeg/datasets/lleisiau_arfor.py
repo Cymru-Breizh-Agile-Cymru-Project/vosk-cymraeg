@@ -17,11 +17,7 @@ def fetch_lleisiau_arfor(output_path: Path) -> None:
         ds: datasets.Dataset = datasets.load_dataset(
             "cymen-arfor/lleisiau-arfor", split=split
         )
-        len_before = len(ds)
-        ds = ds.filter(lambda lang: lang == "cy", input_columns=["language"])
-        print(
-            f"Filtered {len_before - len(ds)} entries ({(len_before - len(ds)) / len_before:.2%})"
-        )
+        ds = ds.rename_column("language", "lang")
 
         # Same as Banc: Since we don't have any info every utterance is a unique speaker
         ds = ds.add_column(
@@ -38,7 +34,7 @@ def fetch_lleisiau_arfor(output_path: Path) -> None:
         ds = ds.remove_columns("audio")
         ds.to_csv(
             output_path / f"{split}.csv",
-            columns=["speaker", "utterance", "path", "sentence"],
+            columns=["speaker", "utterance", "path", "lang", "sentence"],
         )
 
     # Combine all datasets into one

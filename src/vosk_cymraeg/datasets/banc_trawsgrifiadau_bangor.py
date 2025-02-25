@@ -40,12 +40,13 @@ def fetch_banc_trawsgrifiadau_bangor(output_path: Path) -> None:
 
         # Batch dumps all of the bytes in audio
         ds = ds.add_column("path", dump_dataset_audio_files(ds, output_path))
+        ds = ds.add_column("lang", ["cy" for _ in range(len(ds))])
 
         # Audio can then be dumped to save memory
         ds = ds.remove_columns("audio")
         ds.to_csv(
             output_path / f"{split}.csv",
-            columns=["speaker", "utterance", "path", "sentence"],
+            columns=["speaker", "utterance", "path", "lang", "sentence"],
         )
 
     # Combine all datasets into one

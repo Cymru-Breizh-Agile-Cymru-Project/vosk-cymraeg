@@ -36,10 +36,12 @@ def process_common_voice(input_path: Path, output_path: Path) -> None:
                 new_path,
             )
 
-        df = df.with_columns(pl.Series("path", converted_paths))
+        df = df.with_columns(
+            pl.Series("path", converted_paths), pl.lit("cy").alias("lang")
+        )
 
         # Select only the stuff we need and write to a csv file
-        df.select(["speaker", "utterance", "path", "sentence"]).write_csv(
+        df.select(["speaker", "utterance", "path", "lang", "sentence"]).write_csv(
             output_path / f"{split}.csv"
         )
 

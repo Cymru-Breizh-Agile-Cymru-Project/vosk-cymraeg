@@ -13,10 +13,14 @@ from vosk_cymraeg.phonetics.phonemizer import CyPhonemizer, EnPhonemizer, Phonem
 def main() -> None:
     """Create a training/test corpus for Kaldi"""
     args = _get_args()
+    if len(args.lang) == 0:
+        raise ValueError("You need to provide at least one language")
+
+    print(args.lang)
     output_folder = Path("data/output")
 
     # Load merged corpora
-    train_dataset = load_dataset(args.train)
+    train_dataset = load_dataset(args.train, args.lang)
 
     # Load sentences from the training dataset (all should be Welsh)
     sentences = pl.DataFrame(
@@ -32,10 +36,15 @@ def main() -> None:
         )
         .rename({"Lang": "lang", "Sentence": "sentence"})
         .select(["sentence", "lang"])
+        .filter(pl.col("lang").is_in(args.lang))
     )
 
     # Add the tts prompts
-    sentences = pl.concat([sentences, tts_prompts]).unique()
+    sentences = (
+        pl.concat([sentences, tts_prompts])
+        .unique()
+        .filter(pl.col("lang").is_in(args.lang))
+    )
 
     # Generate a word list based on the sentences in the sentences dataframe
     words = (
@@ -77,14 +86,14 @@ def main() -> None:
     if args.dev:
         build_dataset(
             "dev",
-            load_dataset(args.dev),
+            load_dataset(args.dev, args.lang),
             output_folder,
         )
 
     if args.test:
         build_dataset(
             "test",
-            load_dataset(args.test),
+            load_dataset(args.test, args.lang),
             output_folder,
         )
 
@@ -114,13 +123,20 @@ def _get_args() -> argparse.Namespace:
         help="Path to evaluation dataset csv file",
         type=Path,
     )
+    parser.add_argument(
+        "--lang",
+        nargs="+",
+        help="Languages to export",
+        default=["cy", "en"],
+        choices=["cy", "en"],
+    )
     parser.add_argument("--clear", action="store_true", help="Clears the target folder")
     # parser.add_argument("--output", default="output", help="Target folder for the Kaldi dataset", type=Path)
 
     return parser.parse_args()
 
 
-def load_dataset(path: Path) -> pl.DataFrame:
+def load_dataset(path: Path, langs: list[str]) -> pl.DataFrame:
     def filter(sentence: str) -> bool:
         if not sentence:
             return False
@@ -132,6 +148,7 @@ def load_dataset(path: Path) -> pl.DataFrame:
 
     return (
         pl.read_csv(path)
+        .filter(pl.col("lang").is_in(langs))
         .with_columns(
             pl.col("sentence").map_elements(normalise_sentence, return_dtype=str)
         )
