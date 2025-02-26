@@ -53,7 +53,14 @@ Sarah Cooper <s.cooper@bangor.ac.uk>
 
 
 
-import re, sys, traceback
+import logging
+import re
+import sys
+import traceback
+
+
+_logger = logging.getLogger(__name__) 
+
 
 def u8(ob):
     # Not needed in Python 3 as strings are Unicode by default
@@ -651,8 +658,7 @@ def get_type_of_w(phones, parts, i, pre, now, post, tail, tailstr, apostrophePar
 	elif (is_simple_vowel_cluster(pre) or pre == 'i') and (is_simple_vowel_cluster(post) or post == 'i'):
 		return 'w'
 	else:
-	    #print("get_type_of_w: This code should never be reached: ", locals(), file=sys.stderr)
-		pass
+		_logger.debug(f"get_type_of_w: This code should never be reached: {locals()}")
 
 
 if __name__ == '__main__':

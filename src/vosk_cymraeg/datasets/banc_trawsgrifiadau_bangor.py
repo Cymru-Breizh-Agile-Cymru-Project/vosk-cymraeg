@@ -1,8 +1,9 @@
-from pathlib import Path
+import logging
 import os
-from dotenv import load_dotenv
+from pathlib import Path
 
 import datasets
+from dotenv import load_dotenv
 
 from vosk_cymraeg.datasets.hf_utils import (
     create_combined_split,
@@ -11,7 +12,8 @@ from vosk_cymraeg.datasets.hf_utils import (
 
 
 def fetch_banc_trawsgrifiadau_bangor(output_path: Path) -> None:
-    print("Fetching techiaith/banc-trawsgrifiadau-bangor from HuggingFace")
+    logger = logging.getLogger(__name__)
+    logger.info("Loading dataset 'techiaith/banc-trawsgrifiadau-bangor' from HuggingFace")
 
     load_dotenv()
     token = os.environ["HF_TOKEN"]
@@ -27,7 +29,6 @@ def fetch_banc_trawsgrifiadau_bangor(output_path: Path) -> None:
 
         # Since the data contains no speaker information we can treat all utterances as unique
         # speakers which means that the format for each clip is btb-<speaker>-0000
-        print("Generating speaker and utterance columns")
         ds = ds.add_column(
             "speaker", [f"btb-{i + speaker_count:04d}" for i in range(len(ds))]
         )

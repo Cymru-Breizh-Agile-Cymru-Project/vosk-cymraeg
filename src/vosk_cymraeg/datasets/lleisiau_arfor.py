@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 
 import datasets
@@ -9,6 +10,9 @@ from vosk_cymraeg.datasets.hf_utils import (
 
 
 def fetch_lleisiau_arfor(output_path: Path) -> None:
+    logger = logging.getLogger(__name__)
+    logger.info("Loading dataset 'cymen-arfor/lleisiau-arfor' from HuggingFace")
+
     # Since we are processing individual clips we need to
     speaker_count = 0
 

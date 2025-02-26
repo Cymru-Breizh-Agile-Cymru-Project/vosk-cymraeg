@@ -1,10 +1,11 @@
 import argparse
+import logging
 import re
 from pathlib import Path
 from typing import List
 
 import polars as pl
-from rich import print
+from rich.logging import RichHandler
 
 import vosk_cymraeg.datasets.techiaith_text as techiaith_text
 from vosk_cymraeg.normalisation import get_non_domain_chars, normalise_sentence
@@ -14,9 +15,15 @@ URL_PATTERN = re.compile(
     r"([a-z]+:\/\/)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)"
 )
 
+_logger = logging.getLogger(__name__)
+
 
 def main() -> None:
     """Create a training/test corpus for Kaldi"""
+    logging.basicConfig(
+        level="INFO", format="%(message)s", datefmt="[%X]", handlers=[RichHandler()]
+    )
+
     args = _get_args()
     if len(args.lang) == 0:
         raise ValueError("You need to provide at least one language")
@@ -24,27 +31,29 @@ def main() -> None:
     output_folder = Path("data/output")
 
     # Load merged corpora
-    print("Loading training set from disk")
+    _logger.info("Loading training set from disk")
     train_dataset = load_dataset(args.train, args.lang)
 
     # Load sentences from the training dataset (all should be Welsh)
-    print("Loading sentences from training set and additional sources")
+    _logger.info("Loading sentences from training set and additional sources")
     sentences = pl.DataFrame(
         {"sentence": list(train_dataset["sentence"].unique()), "lang": "cy"}
     )
 
+    sentences = pl.concat(
+        [
+            sentences,
+            techiaith_text.load_techiaith_cofnodycynulliad_en_cy(),
+            techiaith_text.load_techiaith_legislation_gov_uk_en_cy(),
+            techiaith_text.load_techiaith_llyw_cymru_en_cy_ogl(),
+            techiaith_text.load_str20tbl_tts_prompts_cy_en(),
+        ]
+    )
+
     # Load sentences from the tts prompts dataset
+    _logger.info(f"Loaded {len(sentences):,} sentences. Continuing on to normalising, filtering, and deduplicating the sentences")
     sentences = (
-        pl.concat(
-            [
-                sentences,
-                techiaith_text.load_techiaith_cofnodycynulliad_en_cy(),
-                techiaith_text.load_techiaith_legislation_gov_uk_en_cy(),
-                techiaith_text.load_techiaith_llyw_cymru_en_cy_ogl(),
-                techiaith_text.load_str20tbl_tts_prompts_cy_en(),
-            ]
-        )
-        .filter(pl.col("lang").is_in(args.lang))
+        sentences.filter(pl.col("lang").is_in(args.lang))
         .unique()
         .filter(
             pl.col("sentence").map_elements(
@@ -54,8 +63,10 @@ def main() -> None:
         .with_columns(pl.col("sentence").map_elements(normalise_sentence, pl.String))
         .filter(pl.col("sentence").map_elements(filter, pl.Boolean))
     )
+    _logger.info(f"The final text corpus contains {len(sentences):,} sentences")
 
     # Generate a word list based on the sentences in the sentences dataframe
+    _logger.info("Generating word list based on sentences")
     words = (
         sentences.lazy()
         .with_columns(pl.col("sentence").str.split(" "))
@@ -66,7 +77,7 @@ def main() -> None:
         .collect()
     )
 
-    print(f"Loaded {len(words)} number of words")
+    _logger.info(f"Loaded {len(words):,} number of words")
 
     # We only provide the train dataset to build the text corpus
     build_text_corpus(sentences["sentence"].unique(), output_folder)
@@ -112,7 +123,7 @@ def filter(sentence: str) -> bool:
         return False
     invalid_chars = get_non_domain_chars(sentence)
     if invalid_chars:
-        # print(f'[yellow]Invalid chars [{"".join(invalid_chars)}] "{sentence}"')
+        _logger.debug(f'[yellow]Invalid chars [{"".join(invalid_chars)}] "{sentence}"')
         return False
     return True
 
@@ -172,13 +183,11 @@ def build_text_corpus(sentences: List[str], output_path: Path) -> None:
     output_path = output_path / "local"
     output_path.mkdir(exist_ok=True, parents=True)
 
-    print("Building 'corpus.txt'... ", end="")
+    _logger.info("Building 'corpus.txt'")
 
     with open(output_path / "corpus.txt", "w", encoding="utf-8") as _f:
         for s in sorted(sentences):
             _f.write(f"{s}\n")
-
-    print("done")
 
 
 def build_lexicon(words: pl.DataFrame, output_path: Path) -> None:
@@ -210,7 +219,7 @@ def build_lexicon(words: pl.DataFrame, output_path: Path) -> None:
         "<twtian>": "SPN",
     }
 
-    print("Building 'lexicon.txt'... ", end="")
+    _logger.info("Building 'lexicon.txt'")
 
     output_path = output_path / "local/dict_nosp"
     output_path.mkdir(exist_ok=True, parents=True)
@@ -232,7 +241,7 @@ def build_lexicon(words: pl.DataFrame, output_path: Path) -> None:
         # Remove empty pronunciations
         pronunciations = [pron for pron in pronunciations if pron]
         if len(pronunciations) == 0 and "cy" in langs:
-            print(f"[red]Failed to phonemize {word!r}")
+            _logger.warning(f"Failed to phonemize {word!r}")
 
         return pronunciations
 
@@ -268,7 +277,6 @@ def build_lexicon(words: pl.DataFrame, output_path: Path) -> None:
             _f.write(f"{word} {' '.join(pronunciation)}\n")
             phone_set.update(pronunciation)
 
-    print("done")
     return phone_set
 
 
@@ -278,7 +286,7 @@ def build_dataset(name: str, df: pl.DataFrame, output_path: Path) -> None:
     dataset_path = output_path / name
     dataset_path.mkdir(parents=True, exist_ok=True)
 
-    print(f"Building '{name}' dataset... ", end="")
+    _logger.info(f"Building '{name}' dataset")
 
     # Build 'text' file
     with open(dataset_path / "text", "w", encoding="utf-8") as _f:
@@ -296,5 +304,3 @@ def build_dataset(name: str, df: pl.DataFrame, output_path: Path) -> None:
         for row in df.sort("path").rows(named=True):
             audio_path = Path(row["path"]).resolve()
             _f.write(f"{row['utterance']}\t{audio_path.resolve()}\n")
-
-    print("done")

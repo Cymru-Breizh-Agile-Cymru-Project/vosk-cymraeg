@@ -1,10 +1,12 @@
 import argparse
+import logging
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
 
 from rich.console import Console
+from rich.logging import RichHandler
 
 from vosk_cymraeg.datasets.banc_trawsgrifiadau_bangor import (
     fetch_banc_trawsgrifiadau_bangor,
@@ -46,13 +48,17 @@ DATASETS = {
 
 def main() -> None:
     """Processes all of the datasets provided in the arguments"""
+    logging.basicConfig(
+        level="INFO", format="%(message)s", datefmt="[%X]", handlers=[RichHandler()]
+    )
+    logger = logging.getLogger(__name__)
     args = _get_args()
     console = Console()
     for dataset_id in args.dataset:
         dataset = DATASETS[dataset_id]
         console.rule(f"[bold]{dataset.name}")
         if args.clear:
-            print("[yellow]Warning: Clearning the output folder")
+            logger.warning("Clearning the output folder")
             shutil.rmtree(dataset.output_path)
         dataset.function(dataset.output_path)
         console.line()
