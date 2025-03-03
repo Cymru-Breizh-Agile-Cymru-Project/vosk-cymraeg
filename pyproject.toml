@@ -9,14 +9,19 @@ authors = [
 requires-python = ">=3.10"
 dependencies = [
     "datasets>=3.2.0",
+    "evaluate>=0.4.3",
     "ipykernel>=6.29.5",
     "ipywidgets>=8.1.5",
+    "jiwer>=3.1.0",
     "polars>=1.19.0",
     "python-dotenv",
     "rich>=13.9.4",
     "soundfile>=0.13.0",
     "sox>=1.5.0",
     "text-process",
+    "tqdm>=4.67.1",
+    "ued",
+    "vosk>=0.3.45",
 ]
 
 [project.scripts]
@@ -24,6 +29,8 @@ vosk = "vosk_cymraeg:main"
 fetch = "vosk_cymraeg.scripts.fetch_datasets:main"
 combine = "vosk_cymraeg.scripts.combine_datasets:main"
 export = "vosk_cymraeg.scripts.export_kaldi:main"
+evaluate = "vosk_cymraeg.scripts.evaluate_model:main"
+test = "vosk_cymraeg.scripts.test:main"
 
 [build-system]
 requires = ["hatchling"]
@@ -36,3 +43,4 @@ dev = [
 
 [tool.uv.sources]
 text-process = { git = "https://gitlab.com/prvInSpace/text-process" }
+universal_edit_distance = { git = "https://gitlab.com/prebens-phd-adventures/universal-error-rate.git" }
