@@ -19,7 +19,7 @@ _logger = logging.getLogger(__name__)
 
 
 def main() -> None:
-    """Create a training/test corpus for Kaldi"""
+    """Create a training/dev/test corpus for Kaldi"""
     logging.basicConfig(
         level="INFO", format="%(message)s", datefmt="[%X]", handlers=[RichHandler()]
     )
@@ -40,6 +40,7 @@ def main() -> None:
         {"sentence": list(train_dataset["sentence"].unique()), "lang": "cy"}
     )
 
+    # Load additional sentences from the tts prompts dataset and other sources
     sentences = pl.concat(
         [
             sentences,
@@ -50,7 +51,6 @@ def main() -> None:
         ]
     )
 
-    # Load sentences from the tts prompts dataset
     _logger.info(
         f"Loaded {len(sentences):,} sentences. Continuing on to normalising, filtering, and deduplicating the sentences"
     )
@@ -63,7 +63,7 @@ def main() -> None:
             )
         )
         .with_columns(pl.col("sentence").map_elements(normalise_sentence, pl.String))
-        .filter(pl.col("sentence").map_elements(filter, pl.Boolean))
+        .filter(pl.col("sentence").map_elements(filter_sentence, pl.Boolean))
     )
     _logger.info(f"The final text corpus contains {len(sentences):,} sentences")
 
@@ -95,14 +95,14 @@ def main() -> None:
     # silence_phones.txt
     silence_phones_path = output_folder / "local/dict_nosp/silence_phones.txt"
     with open(silence_phones_path, "w", encoding="utf-8") as f:
-        f.write("SIL\noov\nSPN\nLAU\nNSN\n")
+        f.write("SIL\noov\nSPN\nLAU\nNSN\n") # TODO: remove 'oov' from silence phones ?
 
     # optional_silence.txt
     optional_silence_path = output_folder / "local/dict_nosp/optional_silence.txt"
     with open(optional_silence_path, "w", encoding="utf-8") as f:
         f.write("SIL\n")
 
-    # Build files specific to train/test datasets
+    # Build files specific to train/dev/test datasets
     build_dataset("train", train_dataset, output_folder)
 
     if args.dev:
@@ -120,7 +120,7 @@ def main() -> None:
         )
 
 
-def filter(sentence: str) -> bool:
+def filter_sentence(sentence: str) -> bool:
     if not sentence:
         return False
     invalid_chars = get_non_domain_chars(sentence)
@@ -175,7 +175,7 @@ def load_dataset(path: Path, langs: list[str]) -> pl.DataFrame:
         .with_columns(
             pl.col("sentence").map_elements(normalise_sentence, return_dtype=str)
         )
-        .filter(pl.col("sentence").map_elements(filter, return_dtype=bool))
+        .filter(pl.col("sentence").map_elements(filter_sentence, return_dtype=bool))
     )
 
 
