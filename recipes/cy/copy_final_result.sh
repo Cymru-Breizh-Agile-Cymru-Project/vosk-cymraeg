@@ -20,3 +20,5 @@ cp exp/chain/tdnn1*_sp_online/final.mdl "$dir/model"
 cp exp/chain/tree_sp/graph_tgsmall/HCLG.fst "$dir/model"
 cp exp/chain/tree_sp/graph_tgsmall/words.txt "$dir/model"
 cp exp/chain/tree_sp/graph_tgsmall/phones/word_boundary.int "$dir/model"
+
+tar -czvf model.tar.gz "$dir/model"
