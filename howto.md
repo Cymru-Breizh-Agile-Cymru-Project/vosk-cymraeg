@@ -91,7 +91,7 @@ Firstly make sure that the Nvidia drivers are working as expected. You can do th
 
 Note that since stage 1-13 takes quite a while and are run exclusively on the CPU and since stage 14 is really the only one that uses the GPU the training might fail once it reaches stage 14 due to Nvidia timing out. If that happens simply restart the training environment and run the script located in stage 10 at the bottom of `run.sh` (if you didn't change it, it is likely `local/chain/run_tdnn_1j_lay12.sh`) as follows:
 ```sh
-bash local/chain/run_tdnn_1j_lay12. --stage 14
+bash local/chain/run_tdnn_1j_lay12.sh --stage 14
 ```
 This resumes training from stage 14. If it complains about some files already existing, delete these and re-run the command.
 
