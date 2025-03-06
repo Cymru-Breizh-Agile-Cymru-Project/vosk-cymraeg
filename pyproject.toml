@@ -31,6 +31,7 @@ fetch = "vosk_cymraeg.scripts.fetch_datasets:main"
 combine = "vosk_cymraeg.scripts.combine_datasets:main"
 export = "vosk_cymraeg.scripts.export_kaldi:main"
 test = "vosk_cymraeg.scripts.test_model:main"
+evaluate = "vosk_cymraeg.scripts.evaluate_model:main"
 
 [build-system]
 requires = ["hatchling"]
