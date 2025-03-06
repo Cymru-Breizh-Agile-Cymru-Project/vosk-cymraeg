@@ -2,18 +2,17 @@ import argparse
 import json
 import logging
 import os
-from typing import Optional
 import wave
 from pathlib import Path
+from typing import Optional
 
 import datasets
 import dotenv
 import polars as pl
+from rich import input, print
 from rich.logging import RichHandler
 from tqdm import tqdm
 from vosk import KaldiRecognizer, Model
-
-from rich import print, input
 
 _logger = logging.getLogger(__name__)
 
