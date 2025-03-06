@@ -13,4 +13,5 @@ wheels/
 *.env
 tmp
 models
+results
 *.tar.gz
