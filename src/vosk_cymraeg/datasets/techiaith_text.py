@@ -22,7 +22,9 @@ def load_techiaith_cofnodycynulliad_en_cy() -> pl.DataFrame:
 
 def load_techiaith_legislation_gov_uk_en_cy() -> pl.DataFrame:
     """Dataset containing translations from legislation.gov.uk"""
-    _logger.info("Loading dataset 'techiaith/legislation-gov-uk_en-cy' from HuggingFace")
+    _logger.info(
+        "Loading dataset 'techiaith/legislation-gov-uk_en-cy' from HuggingFace"
+    )
     df = datasets.load_dataset(
         "techiaith/legislation-gov-uk_en-cy", split="train"
     ).to_polars()

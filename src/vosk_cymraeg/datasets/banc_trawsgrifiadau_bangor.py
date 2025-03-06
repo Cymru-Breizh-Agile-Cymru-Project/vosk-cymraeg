@@ -13,7 +13,9 @@ from vosk_cymraeg.datasets.hf_utils import (
 
 def fetch_banc_trawsgrifiadau_bangor(output_path: Path) -> None:
     logger = logging.getLogger(__name__)
-    logger.info("Loading dataset 'techiaith/banc-trawsgrifiadau-bangor' from HuggingFace")
+    logger.info(
+        "Loading dataset 'techiaith/banc-trawsgrifiadau-bangor' from HuggingFace"
+    )
 
     load_dotenv()
     token = os.environ["HF_TOKEN"]

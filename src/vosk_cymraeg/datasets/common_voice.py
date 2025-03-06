@@ -1,9 +1,9 @@
+import logging
 from pathlib import Path
 
 import polars as pl
 import sox
 from tqdm import tqdm
-import logging
 
 _logger = logging.getLogger(__name__)
 
@@ -11,7 +11,6 @@ DATASET_SPLITS = ["train", "test", "dev", "other"]
 
 
 def process_common_voice(input_path: Path, output_path: Path) -> None:
-
     _logger.info(f"Loading Common Voice data from local path {str(input_path)!r}")
     # Determine length of speaker IDs
     cid_length = determine_cid_length(input_path)

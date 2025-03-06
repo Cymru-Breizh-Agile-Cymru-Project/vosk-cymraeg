@@ -51,7 +51,9 @@ def main() -> None:
     )
 
     # Load sentences from the tts prompts dataset
-    _logger.info(f"Loaded {len(sentences):,} sentences. Continuing on to normalising, filtering, and deduplicating the sentences")
+    _logger.info(
+        f"Loaded {len(sentences):,} sentences. Continuing on to normalising, filtering, and deduplicating the sentences"
+    )
     sentences = (
         sentences.filter(pl.col("lang").is_in(args.lang))
         .unique()
