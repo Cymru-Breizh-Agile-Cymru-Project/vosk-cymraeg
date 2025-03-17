@@ -1,4 +1,4 @@
-from text_process.normalise import cleanup_utf8_chars
+from text_process.normalise import cleanup_utf8_chars, cleanup_spaces
 
 VALID_CHARS = (
     "ABCDEFGHIJKLMNOPQRSTUVWXYZÂÊÎÔÛŴŶÏÖ abcdefghijklmnopqrstuvwxyzâêîôûŵŷï'-<>_áéöòàäë"
@@ -29,7 +29,7 @@ def normalise_sentence(s: str) -> str:
         .replace("''", "'")
     )
 
-    s = remove_punctuation(s).strip()
+    s = cleanup_spaces(remove_punctuation(s)).strip()
     return s.lower()  # We could preserve capitalized words in the future
 
 
