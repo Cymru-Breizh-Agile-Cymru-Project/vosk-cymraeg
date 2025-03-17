@@ -1,6 +1,13 @@
 services:
   training_env:
     image: kaldi-training-env
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 2 # alternatively, use `count: all` for all GPUs
+              capabilities: [gpu]
     build:
       context: .
       dockerfile: ./Dockerfile
