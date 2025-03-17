@@ -32,10 +32,10 @@ def fetch_banc_trawsgrifiadau_bangor(output_path: Path) -> None:
         # Since the data contains no speaker information we can treat all utterances as unique
         # speakers which means that the format for each clip is btb-<speaker>-0000
         ds = ds.add_column(
-            "speaker", [f"btb-{i + speaker_count:04d}" for i in range(len(ds))]
+            "speaker", [f"btb-{i + speaker_count:06d}" for i in range(len(ds))]
         )
         ds = ds.add_column(
-            "utterance", [f"btb-{i + speaker_count:04d}-0000" for i in range(len(ds))]
+            "utterance", [f"btb-{i + speaker_count:06d}-0000" for i in range(len(ds))]
         )
 
         # Update speaker count

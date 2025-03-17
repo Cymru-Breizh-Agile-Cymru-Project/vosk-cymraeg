@@ -13,6 +13,7 @@ from vosk_cymraeg.datasets.banc_trawsgrifiadau_bangor import (
 )
 from vosk_cymraeg.datasets.common_voice import process_common_voice
 from vosk_cymraeg.datasets.lleisiau_arfor import fetch_lleisiau_arfor
+from vosk_cymraeg.datasets.enwau_cymraeg import fetch_enwau_cymraeg
 
 
 @dataclass
@@ -37,6 +38,11 @@ DATASETS = {
         "Banc Trawsgrifiadau Bangor",
         Path("data/interim/banc"),
         fetch_banc_trawsgrifiadau_bangor,
+    ),
+    "enw": Dataset(
+        "Enwau Cymraeg",
+        Path("data/interim/enwau_cymraeg"),
+        fetch_enwau_cymraeg,
     ),
     "lla": Dataset(
         "Lleisiau Arfor",

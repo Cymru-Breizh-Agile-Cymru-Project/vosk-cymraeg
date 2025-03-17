@@ -40,16 +40,21 @@ def main() -> None:
         {"sentence": list(train_dataset["sentence"].unique()), "lang": "cy"}
     )
 
+    # Since the sentences are already in the dataframe, we can remove the audio clips
+    if args.enwau_text_only:
+        train_dataset = train_dataset.filter(~pl.col("speaker").str.starts_with("enw"))
+
     # Load additional sentences from the tts prompts dataset and other sources
-    sentences = pl.concat(
-        [
-            sentences,
-            techiaith_text.load_techiaith_cofnodycynulliad_en_cy(),
-            techiaith_text.load_techiaith_legislation_gov_uk_en_cy(),
-            techiaith_text.load_techiaith_llyw_cymru_en_cy_ogl(),
-            techiaith_text.load_str20tbl_tts_prompts_cy_en(),
-        ]
-    )
+    if args.additional_text:
+        sentences = pl.concat(
+            [
+                sentences,
+                techiaith_text.load_techiaith_cofnodycynulliad_en_cy(),
+                techiaith_text.load_techiaith_legislation_gov_uk_en_cy(),
+                techiaith_text.load_techiaith_llyw_cymru_en_cy_ogl(),
+                techiaith_text.load_str20tbl_tts_prompts_cy_en(),
+            ]
+        )
 
     _logger.info(
         f"Loaded {len(sentences):,} sentences. Continuing on to normalising, filtering, and deduplicating the sentences"
@@ -95,7 +100,7 @@ def main() -> None:
     # silence_phones.txt
     silence_phones_path = output_folder / "local/dict_nosp/silence_phones.txt"
     with open(silence_phones_path, "w", encoding="utf-8") as f:
-        f.write("SIL\noov\nSPN\nLAU\nNSN\n") # TODO: remove 'oov' from silence phones ?
+        f.write("SIL\noov\nSPN\nLAU\nNSN\n")  # TODO: remove 'oov' from silence phones ?
 
     # optional_silence.txt
     optional_silence_path = output_folder / "local/dict_nosp/optional_silence.txt"
@@ -163,6 +168,14 @@ def _get_args() -> argparse.Namespace:
         choices=["cy", "en"],
     )
     parser.add_argument("--clear", action="store_true", help="Clears the target folder")
+    parser.add_argument(
+        "--additional_text", action="store_true", help="Add texts from other sources"
+    )
+    parser.add_argument(
+        "--enwau_text_only",
+        action="store_true",
+        help="Remove enwau audio data from training set",
+    )
     # parser.add_argument("--output", default="output", help="Target folder for the Kaldi dataset", type=Path)
 
     return parser.parse_args()
@@ -176,6 +189,7 @@ def load_dataset(path: Path, langs: list[str]) -> pl.DataFrame:
             pl.col("sentence").map_elements(normalise_sentence, return_dtype=str)
         )
         .filter(pl.col("sentence").map_elements(filter_sentence, return_dtype=bool))
+        .sort("utterance")
     )
 
 

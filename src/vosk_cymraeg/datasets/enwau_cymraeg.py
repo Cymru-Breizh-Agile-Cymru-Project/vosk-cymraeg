@@ -1,3 +1,5 @@
+# https://huggingface.co/datasets/
+
 import logging
 from pathlib import Path
 
@@ -9,26 +11,26 @@ from vosk_cymraeg.datasets.hf_utils import (
 )
 
 
-def fetch_lleisiau_arfor(output_path: Path) -> None:
+def fetch_enwau_cymraeg(output_path: Path) -> None:
     logger = logging.getLogger(__name__)
-    logger.info("Loading dataset 'cymen-arfor/lleisiau-arfor' from HuggingFace")
+    logger.info("Loading dataset 'wanasash/enwaucymraeg' from HuggingFace")
 
     # Since we are processing individual clips we need to
     speaker_count = 0
 
-    dataset_splits = ["train_clean", "dev_clean", "test_clean"]
+    dataset_splits = ["train", "dev", "test"]
     for split in dataset_splits:
         ds: datasets.Dataset = datasets.load_dataset(
-            "cymen-arfor/lleisiau-arfor", split=split
+            "wanasash/enwaucymraeg", split=split
         )
-        ds = ds.rename_column("language", "lang")
+        ds = ds.add_column("lang", ["cy" for _ in range(len(ds))])
 
         # Same as Banc: Since we don't have any info every utterance is a unique speaker
         ds = ds.add_column(
-            "speaker", [f"lla-{i + speaker_count:06d}" for i in range(len(ds))]
+            "speaker", [f"enw-{i + speaker_count:06d}" for i in range(len(ds))]
         )
         ds = ds.add_column(
-            "utterance", [f"lla-{i + speaker_count:06d}-0000" for i in range(len(ds))]
+            "utterance", [f"enw-{i + speaker_count:06d}-0000" for i in range(len(ds))]
         )
         speaker_count += len(ds)
 
