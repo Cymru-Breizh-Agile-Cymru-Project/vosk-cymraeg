@@ -1,5 +1,3 @@
-# https://huggingface.co/datasets/
-
 import logging
 from pathlib import Path
 
