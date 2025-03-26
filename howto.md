@@ -82,6 +82,10 @@ bash run.sh 10
 
 Note that there are some things that you might want to do first and some issues you might run into, and I'll explain these now.
 
+### Changing the hyperparameters
+The `local/chain` folder contains a lot of script that are simply the same script with different hyperparameters. If you want to change the parameters either change the script that is called in stage 10 of `run.sh` with one in that folder or make one yourself. I recommend trying `local/chain/run_tdnn_1j_lay13_ep30_lr1-3.sh` which is the one currently being used by the Breton project.
+
+
 ### CPU training optimization
 
 Beware of out of memory errors when changing the following training parameters in Kaldi.
@@ -91,10 +95,6 @@ Increase the number of parallel jobs used for feature extraction and training, b
 ```sh
 nj=8
 ```
-
-### Changing the hyperparameters
-The `local/chain` folder contains a lot of script that are simply the same script with different hyperparameters. If you want to change the parameters either change the script that is called in stage 10 of `run.sh` with one in that folder or make one yourself. I recommend trying `local/chain/run_tdnn_1j_lay13_ep30_lr1-3.sh` which is the one currently being used by the Breton project.
-
 
 ### Nvidia issues
 Firstly make sure that the Nvidia drivers are working as expected. You can do this by running the following command: `nvidia-smi`. If this command works as expected you are good to go, otherwise you might want to restart the training environment.
