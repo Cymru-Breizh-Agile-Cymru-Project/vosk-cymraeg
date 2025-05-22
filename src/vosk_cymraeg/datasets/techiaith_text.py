@@ -65,6 +65,6 @@ def load_wanasash_brawddegau_enwau_lleoedd() -> pl.DataFrame:
     df = datasets.load_dataset(
         "wanasash/brawddegau_enwau_lleoedd", split="train"
     ).to_polars()
-    return pl.DataFrame({"sentence": df["text"]}),
+    return pl.DataFrame({"sentence": df["text"], "lang": "cy"}
     )
        
