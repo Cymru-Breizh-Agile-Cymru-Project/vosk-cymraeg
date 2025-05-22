@@ -53,6 +53,7 @@ def main() -> None:
                 techiaith_text.load_techiaith_legislation_gov_uk_en_cy(),
                 techiaith_text.load_techiaith_llyw_cymru_en_cy_ogl(),
                 techiaith_text.load_str20tbl_tts_prompts_cy_en(),
+                techiaith_text.load_wanasash_brawddegau_enwau_lleoedd(),
             ]
         )
 
