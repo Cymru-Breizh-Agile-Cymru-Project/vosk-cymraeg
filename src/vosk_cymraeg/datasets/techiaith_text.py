@@ -58,3 +58,13 @@ def load_str20tbl_tts_prompts_cy_en() -> pl.DataFrame:
         .rename({"Lang": "lang", "Sentence": "sentence"})
         .select(["sentence", "lang"])
     )
+
+def load_wanasash_brawddegau_enwau_lleoedd() -> pl.DataFrame:
+    """Dataset containing sentences with new placenames """
+    _logger.info("Loading dataset 'wanasash/brawddegau_enwau_lleoedd' from HuggingFace")
+    df = datasets.load_dataset(
+        "wanasash/brawddegau_enwau_lleoedd", split="train"
+    ).to_polars()
+    return pl.DataFrame({"sentence": df["text"]}),
+    )
+       
