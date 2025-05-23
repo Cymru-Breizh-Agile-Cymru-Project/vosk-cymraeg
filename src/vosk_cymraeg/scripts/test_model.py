@@ -9,7 +9,7 @@ from typing import Optional
 import datasets
 import dotenv
 import polars as pl
-from rich import input, print
+from rich import print
 from rich.logging import RichHandler
 from tqdm import tqdm
 from vosk import KaldiRecognizer, Model
@@ -92,7 +92,6 @@ def main() -> None:
         ds = datasets.Dataset(dataset.to_arrow())
         ds.push_to_hub(
             publish_path,
-            private=True,
             split="test",
             token=os.environ["HF_TOKEN"],
         )
