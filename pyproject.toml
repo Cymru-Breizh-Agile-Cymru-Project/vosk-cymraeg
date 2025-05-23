@@ -16,11 +16,14 @@ dependencies = [
     "polars>=1.19.0",
     "python-dotenv>=1.0.1",
     "rich>=13.9.4",
+    "sacrebleu>=2.5.1",
     "scipy>=1.15.2",
     "soundfile>=0.13.0",
     "sox>=1.5.0",
     "text-process",
+    "torch>=2.6.0",
     "tqdm>=4.67.1",
+    "transformers>=4.49.0",
     "universal-edit-distance",
     "vosk>=0.3.45",
 ]
@@ -32,6 +35,7 @@ combine = "vosk_cymraeg.scripts.combine_datasets:main"
 export = "vosk_cymraeg.scripts.export_kaldi:main"
 test = "vosk_cymraeg.scripts.test_model:main"
 evaluate = "vosk_cymraeg.scripts.evaluate_model:main"
+bias = "vosk_cymraeg.scripts.evaluate_bias:main"
 
 [build-system]
 requires = ["hatchling"]
